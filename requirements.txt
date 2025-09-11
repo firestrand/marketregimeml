@@ -1,0 +1,48 @@
+# Core dependencies
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+scikit-learn>=1.3.0
+
+# Machine Learning models
+hmmlearn>=0.3.0
+arch>=6.0.0  # For GARCH models
+statsmodels>=0.14.0
+
+# Data sources
+alpha-vantage>=2.3.1  # Alpha Vantage API
+v20>=3.0.25.0  # OANDA v20 API
+
+# Performance & Storage
+numba>=0.57.0  # Performance optimization
+joblib>=1.3.0  # Parallel processing
+pyarrow>=14.0.0  # Parquet file support
+
+# Signal Processing & Entropy
+antropy>=0.1.9  # Entropy calculations (updated)
+pyentrp>=0.8.2  # Additional entropy methods
+
+# Change-point Detection
+ruptures>=1.1.7  # Change-point detection algorithms
+
+# Visualization
+plotly>=5.0.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+
+# Configuration & Utilities
+pyyaml>=6.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Testing (for development)
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+
+# Code quality (for development)
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+isort>=5.12.0
+pre-commit>=3.0.0

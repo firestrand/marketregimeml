@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include CONTRIBUTING.md
+include requirements.txt
+recursive-include marketregimeml/config *.yaml
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude tests *
+recursive-exclude examples *
+recursive-exclude scripts *
+recursive-exclude docs *
+recursive-exclude benchmarks *
