@@ -85,6 +85,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
         max_features: Union[str, int] = "sqrt",
         oob_score: bool = False,
         random_state: Optional[int] = None,
+        class_weight: Optional[Union[str, Dict]] = None,
         **kwargs,
     ):
         """Initialize Random Forest regime classifier."""
@@ -96,6 +97,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
         self.min_samples_leaf = min_samples_leaf
         self.max_features = max_features
         self.oob_score = oob_score
+        self.class_weight = class_weight
 
         self.model_ = None
         self.feature_importances_ = None
@@ -157,6 +159,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
             oob_score=self.oob_score,
             random_state=self.random_state,
             n_jobs=-1,
+            class_weight=self.class_weight,
         )
 
         # Fit the model

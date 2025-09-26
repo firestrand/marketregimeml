@@ -149,3 +149,37 @@ class RegimeReorderingUtils:
         max_regime = regimes.max()
 
         return bool(min_regime >= 0 and max_regime < n_regimes)
+
+
+def smooth_regimes_majority(labels: np.ndarray, window: int = 5) -> np.ndarray:
+    """Apply a simple majority filter to regime labels.
+
+    Reduces rapid switching by replacing each label with the majority
+    label within a centered window. Uses odd window size; if even, it
+    is incremented by 1.
+
+    Args:
+        labels: Sequence of integer regime labels (1D array)
+        window: Window size for majority vote (default 5)
+
+    Returns:
+        Smoothed regime labels (np.ndarray)
+    """
+    if window < 1:
+        return labels
+    if window % 2 == 0:
+        window += 1
+    n = len(labels)
+    if n == 0 or window == 1:
+        return labels
+    half = window // 2
+    out = labels.copy()
+    for i in range(n):
+        start = max(0, i - half)
+        end = min(n, i + half + 1)
+        segment = labels[start:end]
+        # Majority label; tie-break by center label to avoid bias
+        vals, counts = np.unique(segment, return_counts=True)
+        maj = vals[np.argmax(counts)]
+        out[i] = maj
+    return out

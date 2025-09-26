@@ -64,7 +64,12 @@ class OANDADataLoader(MarketDataLoader):
         "1m": "M",
     }
 
-    def __init__(self, cache_enabled: bool = True):
+    def __init__(
+        self,
+        cache_enabled: bool = True,
+        store_to_duckdb: bool = False,
+        duckdb_path: Optional[str] = None,
+    ):
         """Initialize OANDA data loader.
 
         Args:
@@ -106,9 +111,19 @@ class OANDADataLoader(MarketDataLoader):
         self.last_request_time = 0
         self.min_request_interval = 0.01  # 100 requests per second max
 
-        # Retry settings
-        self.max_retries = 3
-        self.retry_delay = 1.0
+        # Retry settings (exponential backoff with jitter)
+        self.max_retries = 5
+        self.retry_delay = 0.5
+
+        # Optional DuckDB storage (lazy import to keep optional dependency)
+        self._store = None
+        if store_to_duckdb:
+            try:
+                from marketregimeml.data.storage.duckdb_store import DuckDBStore  # type: ignore
+
+                self._store = DuckDBStore(duckdb_path or "data/market_data.duckdb")
+            except Exception as e:  # pragma: no cover - optional dep
+                logger.warning(f"DuckDB storage not available: {e}")
 
         # Now call super().__init__ which will call _validate_config
         super().__init__(cache_enabled)
@@ -211,6 +226,8 @@ class OANDADataLoader(MarketDataLoader):
         """
         last_error = None
 
+        import random
+
         for attempt in range(self.max_retries):
             try:
                 self._apply_rate_limiting()
@@ -220,13 +237,70 @@ class OANDADataLoader(MarketDataLoader):
                 logger.warning(
                     f"Request failed (attempt {attempt + 1}/{self.max_retries}): {e}"
                 )
-
+                # Exponential backoff with jitter
                 if attempt < self.max_retries - 1:
-                    time.sleep(self.retry_delay * (attempt + 1))
+                    backoff = self.retry_delay * (2 ** attempt)
+                    backoff *= 1.0 + random.random() * 0.25
+                    time.sleep(backoff)
 
         raise ConnectionError(
             f"OANDA API error after {self.max_retries} attempts: {last_error}"
         )
+
+    @staticmethod
+    def _generate_time_windows(
+        start_dt: datetime,
+        end_dt: Optional[datetime],
+        granularity: str,
+        max_per: int = 5000,
+    ):
+        """Generate UTC-aware time windows for paginated fetching.
+
+        This helper is pure (no network) and can be unit tested. It yields
+        (window_start, window_end) datetimes sized to keep each request under
+        typical OANDA per-request candle caps.
+        """
+        # Normalize to UTC-aware timestamps
+        cur = pd.Timestamp(start_dt)
+        if cur.tzinfo is None:
+            cur = cur.tz_localize("UTC")
+        else:
+            cur = cur.tz_convert("UTC")
+
+        end_bound = None
+        if end_dt is not None:
+            end_bound = pd.Timestamp(end_dt)
+            if end_bound.tzinfo is None:
+                end_bound = end_bound.tz_localize("UTC")
+            else:
+                end_bound = end_bound.tz_convert("UTC")
+
+        # Determine days per page by granularity
+        days_per_page = 1
+        if granularity.startswith("M") and granularity not in ("M",):
+            mins = int(granularity[1:])
+            bars_per_day = int(24 * 60 / max(1, mins))
+            # Aim well under 5000
+            days_per_page = max(1, min(10, int(4000 // max(1, bars_per_day)) or 1))
+        elif granularity.startswith("H"):
+            hours = int(granularity[1:]) if len(granularity) > 1 else 1
+            bars_per_day = int(24 / max(1, hours))
+            days_per_page = 90 if bars_per_day <= 24 else 30
+        elif granularity == "D":
+            days_per_page = 4000
+        elif granularity == "W":
+            days_per_page = 4000 * 7
+        elif granularity == "M":
+            days_per_page = 4000 * 30
+
+        while True:
+            if end_bound is not None and cur >= end_bound:
+                break
+            page_end = cur + pd.Timedelta(days=days_per_page)
+            if end_bound is not None and page_end > end_bound:
+                page_end = end_bound
+            yield (cur.to_pydatetime(), page_end.to_pydatetime())
+            cur = page_end + pd.Timedelta(seconds=1)
 
     def _fetch_ohlcv_impl(
         self,
@@ -236,11 +310,14 @@ class OANDADataLoader(MarketDataLoader):
         end_date: Optional[datetime],
         limit: Optional[int],
     ) -> pd.DataFrame:
-        """Implementation-specific OHLCV fetch from OANDA.
+        """Implementation-specific OHLCV fetch from OANDA with pagination.
+
+        Handles OANDA's per-request candle limit (max 5000) by paginating
+        across the requested time range.
 
         Args:
             symbol: Instrument symbol (e.g., 'EUR_USD')
-            timeframe: Timeframe/granularity
+            timeframe: Timeframe/granularity (OANDA or common format)
             start_date: Start date for data fetch
             end_date: End date for data fetch
             limit: Maximum number of candles to fetch
@@ -248,25 +325,79 @@ class OANDADataLoader(MarketDataLoader):
         Returns:
             DataFrame with OHLCV data
         """
-        # Build request parameters
-        params = self._build_request_params(
-            timeframe, start_date, end_date, limit
-        )
-
         try:
-            # Fetch candles from API
-            candles = self._fetch_candles(symbol, params)
+            gran = self._convert_timeframe(timeframe)
+            max_per = 5000
+            remaining = limit if limit is not None else None
+            # Normalize to timezone-aware UTC
+            start_ts = pd.Timestamp(start_date)
+            if start_ts.tzinfo is None:
+                start_ts = start_ts.tz_localize("UTC")
+            else:
+                start_ts = start_ts.tz_convert("UTC")
 
-            if not candles:
+            current_from = start_ts.to_pydatetime()
+
+            final_to = None
+            if end_date is not None:
+                end_ts = pd.Timestamp(end_date)
+                if end_ts.tzinfo is None:
+                    end_ts = end_ts.tz_localize("UTC")
+                else:
+                    end_ts = end_ts.tz_convert("UTC")
+                final_to = end_ts.to_pydatetime()
+            all_candles: List = []
+
+            # Use helper to page
+            for win_from, win_to in self._generate_time_windows(current_from, final_to, gran, max_per):
+                ts_from = pd.Timestamp(win_from)
+                if ts_from.tzinfo is None:
+                    ts_from = ts_from.tz_localize("UTC")
+                params = {
+                    "granularity": gran,
+                    "from": ts_from.strftime("%Y-%m-%dT%H:%M:%S.000000000Z"),
+                    "count": max_per,
+                }
+                candles = self._fetch_candles(symbol, params)
+                if candles:
+                    all_candles.extend(candles)
+                    if remaining is not None:
+                        remaining -= len(candles)
+                        if remaining <= 0:
+                            break
+                else:
+                    if final_to is None:
+                        break
+
+            if not all_candles:
                 logger.warning(f"No data returned for {symbol} {timeframe}")
                 return self._empty_ohlcv_dataframe()
 
-            # Convert candles to DataFrame
-            return self._candles_to_dataframe(candles)
+            df = self._candles_to_dataframe(all_candles)
+            if limit is not None and len(df) > limit:
+                df = df.iloc[-limit:]
+            return df
 
         except Exception as e:
             logger.error(f"Error fetching OANDA data: {e}")
             return self._empty_ohlcv_dataframe()
+
+    # Override fetch_ohlcv to persist after standardization
+    def fetch_ohlcv(
+        self,
+        symbol: str,
+        timeframe: str,
+        start_date: Union[str, datetime],
+        end_date: Optional[Union[str, datetime]] = None,
+        limit: Optional[int] = None,
+    ) -> pd.DataFrame:
+        df = super().fetch_ohlcv(symbol, timeframe, start_date, end_date, limit)
+        if self._store is not None and not df.empty:
+            try:
+                self._store.write_ohlcv(df, symbol=symbol, timeframe=timeframe)
+            except Exception as e:
+                logger.warning(f"Failed to persist OHLCV to DuckDB: {e}")
+        return df
 
     def _build_request_params(
         self,

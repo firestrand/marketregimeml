@@ -1167,7 +1167,9 @@ class BaseRegimeDetector(ABC):
         return self.__class__(**init_params)
 
     def optimize_regime_count(
-        self, features: pd.DataFrame, criteria: str = "aic"
+        self, features: pd.DataFrame, criteria: str = "aic", *,
+        min_silhouette: float = 0.0,
+        min_cluster_prop: float = 0.0,
     ) -> Dict[str, Any]:
         """Find optimal number of regimes using model selection criteria.
 
@@ -1212,21 +1214,54 @@ class BaseRegimeDetector(ABC):
                 logger.warning(f"Failed to fit model with {n} regimes: {e}")
                 scores[n] = np.inf
 
-        # Find optimal number of regimes
+        # Find optimal number by criteria
         optimal_n = min(scores.keys(), key=lambda k: scores[k])
+        chosen_model = models.get(optimal_n)
+
+        # Guardrails: if using likelihood criteria and guardrails are set, verify separation
+        def _min_prop(preds: np.ndarray) -> float:
+            counts = np.bincount(preds)
+            return float(counts.min() / len(preds)) if len(counts) else 0.0
+
+        if criteria in ("aic", "bic") and (min_silhouette > 0.0 or min_cluster_prop > 0.0):
+            try:
+                # Evaluate silhouette for chosen and all tried models; fallback to best passing guardrails
+                sil_scores: Dict[int, float] = {}
+                passing: Dict[int, float] = {}
+                X = features.values if hasattr(features, "values") else np.asarray(features)
+                for n, m in models.items():
+                    preds = m.predict(features)
+                    if len(np.unique(preds)) < 2:
+                        sil = 0.0
+                    else:
+                        from sklearn.metrics import silhouette_score
+
+                        sil = float(silhouette_score(X, preds))
+                    sil_scores[n] = sil
+                    if sil >= min_silhouette and _min_prop(preds) >= min_cluster_prop:
+                        passing[n] = sil
+
+                if optimal_n not in passing:
+                    # Fallback to best silhouette among passing
+                    if passing:
+                        optimal_n = max(passing.keys(), key=lambda k: passing[k])
+                        chosen_model = models.get(optimal_n)
+                        logger.info(
+                            f"Guardrails adjusted optimal n_regimes to {optimal_n} based on silhouette"
+                        )
+            except Exception as e:
+                logger.warning(f"Guardrails evaluation failed: {e}")
 
         self.optimization_config.optimal_regimes = optimal_n
         self.optimization_config.regime_scores = scores
 
-        logger.info(
-            f"Optimal regime count: {optimal_n} (criterion: {criteria})"
-        )
+        logger.info(f"Optimal regime count: {optimal_n} (criterion: {criteria})")
 
         return {
             "optimal_regimes": optimal_n,
             "scores": scores,
             "criterion": criteria,
-            "best_model": models.get(optimal_n),
+            "best_model": chosen_model,
         }
 
     def get_params(self, deep: bool = True) -> Dict[str, Any]:

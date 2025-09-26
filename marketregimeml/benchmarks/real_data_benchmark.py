@@ -14,6 +14,7 @@ import pandas as pd
 
 from marketregimeml.evaluation.metrics import RegimeMetrics
 from marketregimeml.data.loaders import OANDADataLoader, KrakenDataLoader
+from marketregimeml.data.storage.duckdb_store import DuckDBStore
 from marketregimeml.data.loaders.alphavantage import AlphaVantageLoader
 
 
@@ -53,6 +54,19 @@ class RealDataLoader:
         Returns:
             DataFrame with features or None if failed
         """
+        # Try DuckDB first to avoid unnecessary API calls
+        try:
+            store = DuckDBStore()
+            ohlcv = store.read_ohlcv(symbol, "D")
+            if not ohlcv.empty:
+                if len(ohlcv) > limit:
+                    ohlcv = ohlcv.iloc[-limit:]
+                features = self._prepare_features(ohlcv)
+                print(f"  Loaded {len(features)} {symbol} samples from DuckDB")
+                return features
+        except Exception:
+            pass
+
         try:
             loader = KrakenDataLoader()
             
@@ -90,6 +104,21 @@ class RealDataLoader:
         Returns:
             DataFrame with features or None if failed
         """
+        # Try DuckDB first to avoid unnecessary API calls
+        try:
+            store = DuckDBStore()
+            # Try both common labels
+            for tf in ("daily", "D"):
+                ohlcv = store.read_ohlcv("SPY", tf)
+                if not ohlcv.empty:
+                    if len(ohlcv) > limit:
+                        ohlcv = ohlcv.iloc[-limit:]
+                    features = self._prepare_features(ohlcv)
+                    print(f"  Loaded {len(features)} SPY samples from DuckDB ({tf})")
+                    return features
+        except Exception:
+            pass
+
         try:
             loader = AlphaVantageLoader()
             
@@ -169,8 +198,22 @@ class RealDataLoader:
         Returns:
             DataFrame with features or None if failed
         """
+
+        # Try DuckDB first to avoid unnecessary API calls
         try:
-            loader = OANDADataLoader()
+            store = DuckDBStore()
+            ohlcv = store.read_ohlcv(symbol, timeframe)
+            if not ohlcv.empty:
+                if len(ohlcv) > limit:
+                    ohlcv = ohlcv.iloc[-limit:]
+                features = self._prepare_features(ohlcv)
+                print(f"  Loaded {len(features)} {symbol} samples from DuckDB")
+                return features
+        except Exception:
+            pass
+
+        try:
+            loader = OANDADataLoader(store_to_duckdb=True)
             
             end_date = datetime.now()
             if timeframe == "D":
@@ -243,66 +286,92 @@ class RealDataLoader:
             return None
     
     def _prepare_features(self, ohlcv: pd.DataFrame) -> pd.DataFrame:
-        """Prepare features from OHLCV data (DRY principle).
-        
-        Args:
-            ohlcv: OHLCV DataFrame
-            
-        Returns:
-            Feature DataFrame
+        """Prepare features from OHLCV using FeatureEngine plus core set.
+
+        Combines advanced features (volatility/entropy/statistical/technical)
+        with a small core set used previously, then drops NA.
         """
-        features = pd.DataFrame()
-        
-        # Returns
-        features['returns'] = ohlcv['close'].pct_change()
-        
-        # Volatility measures
-        # Parkinson volatility
-        features['parkinson_vol'] = np.sqrt(
-            np.log(ohlcv['high'] / ohlcv['low']) ** 2 / (4 * np.log(2))
+        from marketregimeml.features.engine import FeatureEngine
+
+        # Estimate bar minutes from index frequency
+        bar_minutes = None
+        try:
+            freq = pd.infer_freq(ohlcv.index)
+            if freq and freq.endswith("T"):
+                bar_minutes = int(freq[:-1])
+            elif freq and freq.endswith("min"):
+                bar_minutes = int(freq[:-3])
+            else:
+                # Fallback: median diff
+                md = (ohlcv.index[1:] - ohlcv.index[:-1]).median()
+                bar_minutes = int(md.total_seconds() // 60)
+        except Exception:
+            pass
+
+        # Retune windows for intraday M15/M30/H1 to improve separation
+        fe_window = 20
+        roll_vol_window = 20
+        mom_fast, mom_slow = 10, 20
+        if bar_minutes is not None:
+            if 14 <= bar_minutes <= 16:  # M15
+                fe_window = 30
+                roll_vol_window = 30
+                mom_fast, mom_slow = 15, 30
+            elif 25 <= bar_minutes <= 35:  # M30
+                fe_window = 40
+                roll_vol_window = 40
+                mom_fast, mom_slow = 20, 40
+            elif 55 <= bar_minutes <= 65:  # H1
+                fe_window = 28
+                roll_vol_window = 28
+                mom_fast, mom_slow = 12, 24
+
+        # Advanced features with tuned window
+        engine = FeatureEngine()
+        adv = engine.compute_features(
+            ohlcv[["open", "high", "low", "close", "volume"]],
+            window=fe_window,
         )
-        
-        # Garman-Klass volatility
-        features['gk_vol'] = np.sqrt(
-            0.5 * np.log(ohlcv['high'] / ohlcv['low']) ** 2 - 
-            (2 * np.log(2) - 1) * np.log(ohlcv['close'] / ohlcv['open']) ** 2
-        )
-        
-        # Rolling standard deviation
-        features['rolling_vol'] = features['returns'].rolling(20).std()
-        
-        # Momentum indicators
-        features['momentum_10'] = features['returns'].rolling(10).mean()
-        features['momentum_20'] = features['returns'].rolling(20).mean()
-        
-        # RSI
-        delta = ohlcv['close'].diff()
+
+        # Core quick features (kept for continuity)
+        core = pd.DataFrame(index=ohlcv.index)
+        core["returns"] = ohlcv["close"].pct_change()
+        core["rolling_vol"] = core["returns"].rolling(roll_vol_window).std()
+        # RSI reusing technical indicator from engine would require import; keep simple version
+        delta = ohlcv["close"].diff()
         gain = (delta.where(delta > 0, 0)).rolling(14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
         rs = gain / (loss + 1e-10)
-        features['rsi'] = 100 - (100 / (1 + rs))
-        
-        # Volume (normalized by rolling mean)
-        if 'volume' in ohlcv.columns and ohlcv['volume'].sum() > 0:
-            vol_mean = ohlcv['volume'].rolling(20, min_periods=1).mean()
-            features['volume_ratio'] = ohlcv['volume'] / (vol_mean + 1e-10)
+        core["rsi"] = 100 - (100 / (1 + rs))
+        # Volume ratio
+        if "volume" in ohlcv.columns and ohlcv["volume"].sum() > 0:
+            vol_mean = ohlcv["volume"].rolling(20, min_periods=1).mean()
+            core["volume_ratio"] = ohlcv["volume"] / (vol_mean + 1e-10)
         else:
-            features['volume_ratio'] = 1.0
-        
-        # Price position within daily range
-        features['price_position'] = (
-            (ohlcv['close'] - ohlcv['low']) / 
-            (ohlcv['high'] - ohlcv['low'] + 1e-10)
-        )
-        
-        # ATR (Average True Range)
-        high_low = ohlcv['high'] - ohlcv['low']
-        high_close = np.abs(ohlcv['high'] - ohlcv['close'].shift())
-        low_close = np.abs(ohlcv['low'] - ohlcv['close'].shift())
-        true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-        features['atr'] = true_range.rolling(14).mean()
-        
-        return features.dropna()
+            core["volume_ratio"] = 1.0
+
+        # Optional denoising (adds denoised close/returns columns)
+        try:
+            import os
+            if os.getenv("MRML_USE_DENOISER", "0") == "1":
+                from marketregimeml.preprocessing.denoiser_integration import denoise_series
+
+                y = denoise_series(ohlcv["close"].values)
+                if y is not None and len(y) == len(ohlcv):
+                    core["close_denoised"] = y
+                    core["returns_denoised"] = pd.Series(y, index=ohlcv.index).pct_change()
+        except Exception:
+            pass
+
+        # Merge and clean
+        features = pd.concat([adv, core], axis=1)
+        features = features.replace([np.inf, -np.inf], np.nan).dropna()
+        # Normalize features to reduce scale effects (robust to outliers)
+        try:
+            features = engine.normalize_features(features, method="robust")
+        except Exception:
+            pass
+        return features
 
 
 class ModelBenchmark:
