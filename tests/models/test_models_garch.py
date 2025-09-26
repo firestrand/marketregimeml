@@ -241,17 +241,17 @@ class TestGARCHRegimeDetector:
     def test_threshold_methods(self, sample_features):
         """Test different threshold determination methods."""
         # Quantile method
-        detector_q = GARCHRegimeDetector(threshold_method="quantile")
+        detector_q = GARCHRegimeDetector(n_regimes=3, threshold_method="quantile")
         detector_q.fit(sample_features)
         regimes_q = detector_q.predict(sample_features)
 
         # K-means method
-        detector_k = GARCHRegimeDetector(threshold_method="kmeans")
+        detector_k = GARCHRegimeDetector(n_regimes=3, threshold_method="kmeans")
         detector_k.fit(sample_features)
         regimes_k = detector_k.predict(sample_features)
 
         # Jenks method
-        detector_j = GARCHRegimeDetector(threshold_method="jenks")
+        detector_j = GARCHRegimeDetector(n_regimes=3, threshold_method="jenks")
         detector_j.fit(sample_features)
         regimes_j = detector_j.predict(sample_features)
 

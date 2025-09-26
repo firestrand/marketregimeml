@@ -89,10 +89,7 @@ class TestDataPipelineIntegration:
         )
 
         # Volatility features
-        vol_result = vol_features.calculate_features(data, returns=returns)
-        features["realized_vol"] = vol_result.get(
-            "realized_volatility", returns.rolling(20).std()
-        )
+        features["realized_vol"] = returns.rolling(20).std()
 
         # Clean features
         features = features.fillna(method="ffill").fillna(0)

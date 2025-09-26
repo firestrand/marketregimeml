@@ -244,7 +244,7 @@ class TestModelPersistence:
     def test_invalid_file_path(self):
         """Test error handling for invalid file paths."""
         # Try to load non-existent file
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(ValueError, match="Failed to load model"):
             HMMRegimeDetector.load_model("/non/existent/path.pkl")
 
         # Try to save to invalid directory

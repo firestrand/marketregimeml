@@ -15,9 +15,6 @@ from marketregimeml.models import (
     RandomForestRegimeClassifier,
     XGBoostRegimeClassifier,
     SVMRegimeClassifier,
-    LSTMRegimeDetector,
-    TransformerRegimeDetector,
-    CNNLSTMRegimeDetector,
     EnsembleRegimeDetector,
 )
 from marketregimeml.evaluation import ModelEvaluator
@@ -175,58 +172,7 @@ class TestAllModelsIntegration:
         proba = model.predict_proba(sample_data)
         assert proba.shape == (len(sample_data), 3)
 
-    def test_lstm_model(self, sample_data):
-        """Test LSTM model."""
-        model = LSTMRegimeDetector(
-            n_regimes=3,
-            hidden_size=16,
-            n_epochs=1,
-            sequence_length=10,
-            batch_size=16,
-        )
-        model.fit(sample_data)
-
-        predictions = model.predict(sample_data)
-        assert len(predictions) > 0
-
-        proba = model.predict_proba(sample_data)
-        assert proba.shape[1] == 3
-
-    def test_transformer_model(self, sample_data):
-        """Test Transformer model."""
-        model = TransformerRegimeDetector(
-            n_regimes=3,
-            d_model=16,
-            n_heads=2,
-            n_layers=1,
-            n_epochs=1,
-            sequence_length=10,
-        )
-        model.fit(sample_data)
-
-        predictions = model.predict(sample_data)
-        assert len(predictions) > 0
-
-        proba = model.predict_proba(sample_data)
-        assert proba.shape[1] == 3
-
-    def test_cnn_lstm_model(self, sample_data):
-        """Test CNN-LSTM model."""
-        model = CNNLSTMRegimeDetector(
-            n_regimes=3,
-            cnn_filters=[8, 16],
-            kernel_sizes=[3, 3],
-            lstm_hidden=16,
-            n_epochs=1,
-            sequence_length=10,
-        )
-        model.fit(sample_data)
-
-        predictions = model.predict(sample_data)
-        assert len(predictions) > 0
-
-        proba = model.predict_proba(sample_data)
-        assert proba.shape[1] == 3
+    # Deep learning models removed - not implemented
 
     def test_ensemble_model(self, sample_data):
         """Test Ensemble model."""

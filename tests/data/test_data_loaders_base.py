@@ -15,10 +15,10 @@ class MockDataLoader(MarketDataLoader):
         """Mock validation."""
         pass
 
-    def fetch_ohlcv(
+    def _fetch_ohlcv_impl(
         self, symbol, timeframe, start_date, end_date=None, limit=None
     ) -> pd.DataFrame:
-        """Mock fetch_ohlcv."""
+        """Mock implementation of _fetch_ohlcv_impl."""
         # Generate mock data
         dates = pd.date_range(start="2023-01-01", periods=100, freq="1h")
         data = {
@@ -36,6 +36,12 @@ class MockDataLoader(MarketDataLoader):
         df["low"] = df[["open", "low", "close"]].min(axis=1)
 
         return df
+
+    def fetch_ohlcv(
+        self, symbol, timeframe, start_date, end_date=None, limit=None
+    ) -> pd.DataFrame:
+        """Mock fetch_ohlcv - delegates to _fetch_ohlcv_impl."""
+        return self._fetch_ohlcv_impl(symbol, timeframe, start_date, end_date, limit)
 
     def fetch_multiple(
         self, symbols, timeframe, start_date, end_date=None, limit=None

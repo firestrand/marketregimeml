@@ -466,11 +466,13 @@ class GARCHRegimeDetector(BaseRegimeDetector):
 
                 # Calculate regime durations
                 regime_changes = np.diff(
-                    np.concatenate([[False], mask, [False]])
+                    np.concatenate([[False], mask.astype(bool), [False]])
                 )
                 regime_starts = np.where(regime_changes == 1)[0]
                 regime_ends = np.where(regime_changes == -1)[0]
-                durations = regime_ends - regime_starts
+                # Ensure matching array sizes
+                min_len = min(len(regime_starts), len(regime_ends))
+                durations = regime_ends[:min_len] - regime_starts[:min_len]
 
                 characteristics[regime] = {
                     "mean_volatility": regime_vol.mean(),

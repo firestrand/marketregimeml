@@ -156,7 +156,7 @@ class OHLCVValidator:
 
         # Convert to float64 for consistency
         for col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+            df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
 
         return df
 

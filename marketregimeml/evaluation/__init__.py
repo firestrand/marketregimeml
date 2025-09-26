@@ -8,20 +8,6 @@ from typing import Optional, Dict, Any
 
 from marketregimeml.evaluation.metrics import RegimeMetrics
 from marketregimeml.evaluation.evaluator import ModelEvaluator
-from marketregimeml.evaluation.backtester import RegimeBacktester
-from marketregimeml.evaluation.performance import (
-    PerformanceEvaluator,
-    calculate_sharpe_ratio,
-    calculate_sortino_ratio,
-    calculate_calmar_ratio,
-    calculate_max_drawdown,
-    calculate_win_rate,
-    calculate_profit_factor,
-    calculate_information_ratio,
-    calculate_regime_based_returns,
-    calculate_regime_transition_returns,
-    backtest_regime_strategy,
-)
 
 # Expose functional metrics for backward compatibility
 try:
@@ -103,19 +89,6 @@ __all__ = [
     "RegimeMetrics",
     "ModelEvaluator",
     "RegimeEvaluator",  # compatibility wrapper
-    "RegimeBacktester",  # compatibility wrapper
-    # Performance helpers
-    "PerformanceEvaluator",
-    "calculate_sharpe_ratio",
-    "calculate_sortino_ratio",
-    "calculate_calmar_ratio",
-    "calculate_max_drawdown",
-    "calculate_win_rate",
-    "calculate_profit_factor",
-    "calculate_information_ratio",
-    "calculate_regime_based_returns",
-    "calculate_regime_transition_returns",
-    "backtest_regime_strategy",
 ]
 
 # Add legacy/function exports if available

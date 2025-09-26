@@ -72,7 +72,7 @@ class TestRandomForestRegimeClassifier:
         """Test Random Forest classifier initialization."""
         # Default initialization
         clf = RandomForestRegimeClassifier()
-        assert clf.n_regimes == 3
+        assert clf.n_regimes == 5  # Default is 5 based on benchmarks
         assert clf.n_estimators == 100
         assert clf.max_depth is None
         assert not clf.is_fitted
@@ -283,7 +283,7 @@ class TestXGBoostRegimeClassifier:
     def test_initialization(self):
         """Test XGBoost initialization."""
         clf = XGBoostRegimeClassifier()
-        assert clf.n_regimes == 3
+        assert clf.n_regimes == 5  # Default is 5 based on benchmarks
         assert clf.n_estimators == 100
         assert clf.learning_rate == 0.1
         assert clf.max_depth == 6

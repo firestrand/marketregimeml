@@ -27,19 +27,7 @@ from marketregimeml.models.ensemble import (
     BoostingEnsemble
 )
 
-# Deep Learning models (optional, requires torch)
-try:
-    from marketregimeml.models.deep_learning import (
-        LSTMRegimeDetector,
-        TransformerRegimeDetector,
-        CNNLSTMRegimeDetector
-    )
-    _DEEP_LEARNING_AVAILABLE = True
-except Exception:
-    LSTMRegimeDetector = None
-    TransformerRegimeDetector = None
-    CNNLSTMRegimeDetector = None
-    _DEEP_LEARNING_AVAILABLE = False
+# Deep Learning models removed - were just stubs
 
 __all__ = [
     # Base
@@ -59,12 +47,7 @@ __all__ = [
     # Ensemble models
     'EnsembleRegimeDetector',
     'VotingEnsemble',
-    'StackingEnsemble', 
+    'StackingEnsemble',
     'BaggingEnsemble',
     'BoostingEnsemble',
-    
-    # Deep Learning (when available)
-    'LSTMRegimeDetector',
-    'TransformerRegimeDetector',
-    'CNNLSTMRegimeDetector',
 ]
