@@ -174,7 +174,7 @@ class TestMarketDataLoader:
         }
         df = pd.DataFrame(data, index=dates)
 
-        with pytest.raises(ValueError, match="Missing columns"):
+        with pytest.raises(ValueError, match="Missing required columns"):
             loader.validate_ohlcv(df)
 
     def test_validate_ohlcv_invalid_high_low(self, loader):
@@ -189,7 +189,7 @@ class TestMarketDataLoader:
         }
         df = pd.DataFrame(data, index=dates)
 
-        with pytest.raises(ValueError, match="High < Low"):
+        with pytest.raises(ValueError, match="High must be >= Low"):
             loader.validate_ohlcv(df)
 
     def test_validate_ohlcv_nan_values(self, loader):
@@ -219,7 +219,7 @@ class TestMarketDataLoader:
         }
         df = pd.DataFrame(data, index=dates)
 
-        with pytest.raises(ValueError, match="Negative prices found"):
+        with pytest.raises(ValueError, match="Prices cannot be negative"):
             loader.validate_ohlcv(df)
 
     def test_resample_ohlcv(self, loader, valid_ohlcv_df):

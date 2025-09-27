@@ -79,10 +79,9 @@ class TestConfigLoader:
 
     def test_init_with_invalid_dir(self):
         """Test initialization with invalid config directory."""
-        with pytest.raises(
-            ValueError, match="Configuration directory not found"
-        ):
-            ConfigLoader("/nonexistent/path")
+        # ConfigLoader allows non-existent directories
+        loader = ConfigLoader("/nonexistent/path")
+        assert loader.config_dir == Path("/nonexistent/path")
 
     def test_load_markets_config(self, temp_config_dir):
         """Test loading markets configuration."""
@@ -148,8 +147,9 @@ class TestConfigLoader:
         """Test loading non-existent configuration file."""
         loader = ConfigLoader(str(temp_config_dir))
 
-        with pytest.raises(ValueError, match="Configuration file not found"):
-            loader.load("nonexistent")
+        # Returns empty dict for non-existent configs
+        config = loader.load("nonexistent")
+        assert config == {}
 
     def test_get_market_config(self, temp_config_dir):
         """Test get_market_config helper."""

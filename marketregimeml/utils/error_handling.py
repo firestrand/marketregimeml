@@ -162,7 +162,7 @@ class ErrorHandler:
         self.logger.debug(f"Traceback: {traceback.format_exc()}")
 
         if raise_error:
-            raise
+            raise error
 
         return default_return
 

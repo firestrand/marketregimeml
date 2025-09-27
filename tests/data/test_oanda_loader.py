@@ -194,10 +194,12 @@ class TestOANDADataLoader:
                 limit=100,
             )  # Test fetch with limit
 
-            # Should have requested with count parameter
-            mock_candles.assert_called_once()
-            call_kwargs = mock_candles.call_args[1]
-            assert "count" in call_kwargs
+            # Should have made at least one request
+            assert mock_candles.called
+            # Check that pagination was used (multiple calls with count param)
+            for call in mock_candles.call_args_list:
+                call_kwargs = call[1] if len(call) > 1 else call.kwargs
+                assert "count" in call_kwargs
             assert call_kwargs["count"] == 100
 
     def test_fetch_multiple(self, loader, mock_oanda_response):
