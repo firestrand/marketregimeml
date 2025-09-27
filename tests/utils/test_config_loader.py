@@ -28,9 +28,7 @@ class TestConfigLoader:
                         "timeframes": ["1h", "1d"],
                     }
                 },
-                "data_sources": {
-                    "test_source": {"api_key": "test_key", "timeout": 30}
-                },
+                "data_sources": {"test_source": {"api_key": "test_key", "timeout": 30}},
                 "cache": {"enabled": True, "type": "parquet"},
                 "logging": {"level": "INFO"},
             }
@@ -259,7 +257,4 @@ class TestConfigLoader:
 
         assert config["database"]["connections"][0]["host"] == "localhost"
         assert config["database"]["connections"][0]["port"] == "5432"
-        assert (
-            config["database"]["connections"][1]["host"]
-            == "backup.example.com"
-        )
+        assert config["database"]["connections"][1]["host"] == "backup.example.com"

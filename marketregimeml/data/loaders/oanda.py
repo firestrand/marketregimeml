@@ -6,8 +6,10 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
+
 try:  # pragma: no cover - optional dependency
     import v20
+
     _HAS_V20 = True
 except Exception:
     v20 = None  # type: ignore
@@ -95,7 +97,9 @@ class OANDADataLoader(MarketDataLoader):
             self.hostname = "api-fxpractice.oanda.com"
 
         if not _HAS_V20:
-            raise ImportError("v20 (OANDA API) not installed. Install with: pip install v20")
+            raise ImportError(
+                "v20 (OANDA API) not installed. Install with: pip install v20"
+            )
 
         # Initialize v20 context
         self.api = v20.Context(
@@ -128,9 +132,7 @@ class OANDADataLoader(MarketDataLoader):
         # Now call super().__init__ which will call _validate_config
         super().__init__(cache_enabled)
 
-        logger.info(
-            f"OANDA loader initialized for {self.environment} environment"
-        )
+        logger.info(f"OANDA loader initialized for {self.environment} environment")
 
     def _validate_config(self) -> None:
         """Validate OANDA configuration.
@@ -138,9 +140,7 @@ class OANDADataLoader(MarketDataLoader):
         Checks API connectivity and account access.
         """
         # Skip validation in test environment or if API is mocked
-        if hasattr(self.api, "__class__") and "Mock" in str(
-            self.api.__class__
-        ):
+        if hasattr(self.api, "__class__") and "Mock" in str(self.api.__class__):
             logger.debug("Skipping validation for mocked API")
             return
 
@@ -151,7 +151,6 @@ class OANDADataLoader(MarketDataLoader):
         except Exception as e:
             logger.warning(f"Could not validate OANDA configuration: {e}")
             # Don't fail initialization, just warn
-            pass
 
     def get_available_symbols(self) -> List[str]:
         """Get list of available symbols from OANDA.
@@ -239,7 +238,7 @@ class OANDADataLoader(MarketDataLoader):
                 )
                 # Exponential backoff with jitter
                 if attempt < self.max_retries - 1:
-                    backoff = self.retry_delay * (2 ** attempt)
+                    backoff = self.retry_delay * (2**attempt)
                     backoff *= 1.0 + random.random() * 0.25
                     time.sleep(backoff)
 
@@ -349,7 +348,9 @@ class OANDADataLoader(MarketDataLoader):
             all_candles: List = []
 
             # Use helper to page
-            for win_from, win_to in self._generate_time_windows(current_from, final_to, gran, max_per):
+            for win_from, win_to in self._generate_time_windows(
+                current_from, final_to, gran, max_per
+            ):
                 ts_from = pd.Timestamp(win_from)
                 if ts_from.tzinfo is None:
                     ts_from = ts_from.tz_localize("UTC")
@@ -439,9 +440,7 @@ class OANDADataLoader(MarketDataLoader):
             return response.body.get("candles", [])
 
         # v20 returns response objects
-        return (
-            response.body.candles if hasattr(response.body, "candles") else []
-        )
+        return response.body.candles if hasattr(response.body, "candles") else []
 
     def _candles_to_dataframe(self, candles: List) -> pd.DataFrame:
         """Convert candles to DataFrame."""
@@ -527,9 +526,7 @@ class OANDADataLoader(MarketDataLoader):
 
         for symbol in symbols:
             try:
-                df = self.fetch_ohlcv(
-                    symbol, timeframe, start_date, end_date, limit
-                )
+                df = self.fetch_ohlcv(symbol, timeframe, start_date, end_date, limit)
                 result[symbol] = df
             except Exception as e:
                 logger.error(f"Failed to fetch data for {symbol}: {e}")

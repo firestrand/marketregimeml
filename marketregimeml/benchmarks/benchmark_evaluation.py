@@ -180,9 +180,7 @@ class BenchmarkEvaluator:
                     results.append(metrics)
 
                 except Exception as e:
-                    logger.error(
-                        f"Failed to evaluate {model_name} on {data_key}: {e}"
-                    )
+                    logger.error(f"Failed to evaluate {model_name} on {data_key}: {e}")
 
         # Create comparison DataFrame
         comparison_df = pd.DataFrame(results)
@@ -199,20 +197,18 @@ class BenchmarkEvaluator:
         for metric in ranking_metrics:
             if metric in comparison_df.columns:
                 # Higher is better for these metrics
-                comparison_df[f"{metric}_rank"] = comparison_df.groupby(
-                    "dataset"
-                )[metric].rank(ascending=False)
+                comparison_df[f"{metric}_rank"] = comparison_df.groupby("dataset")[
+                    metric
+                ].rank(ascending=False)
 
         # Davies-Bouldin: lower is better
         if "davies_bouldin" in comparison_df.columns:
-            comparison_df["davies_bouldin_rank"] = comparison_df.groupby(
-                "dataset"
-            )["davies_bouldin"].rank(ascending=True)
+            comparison_df["davies_bouldin_rank"] = comparison_df.groupby("dataset")[
+                "davies_bouldin"
+            ].rank(ascending=True)
 
         # Calculate average rank
-        rank_cols = [
-            col for col in comparison_df.columns if col.endswith("_rank")
-        ]
+        rank_cols = [col for col in comparison_df.columns if col.endswith("_rank")]
         if rank_cols:
             comparison_df["avg_rank"] = comparison_df[rank_cols].mean(axis=1)
 
@@ -293,15 +289,9 @@ class BenchmarkEvaluator:
 
                 for idx, row in top_models.iterrows():
                     report.append(f"  {row['model']}:")
-                    report.append(
-                        f"    - Persistence: {row.get('persistence', 0):.3f}"
-                    )
-                    report.append(
-                        f"    - Stability: {row.get('stability', 0):.3f}"
-                    )
-                    report.append(
-                        f"    - Train Time: {row.get('train_time', 0):.2f}s"
-                    )
+                    report.append(f"    - Persistence: {row.get('persistence', 0):.3f}")
+                    report.append(f"    - Stability: {row.get('stability', 0):.3f}")
+                    report.append(f"    - Train Time: {row.get('train_time', 0):.2f}s")
                     report.append(
                         f"    - Inference Speed: {row.get('inference_speed', 0):.0f} samples/s"
                     )
@@ -352,9 +342,7 @@ class BenchmarkEvaluator:
         fig, ax = plt.subplots(figsize=(12, 6))
 
         # Pivot data for plotting
-        pivot_data = self.results.pivot(
-            index="model", columns="dataset", values=metric
-        )
+        pivot_data = self.results.pivot(index="model", columns="dataset", values=metric)
 
         pivot_data.plot(kind="bar", ax=ax)
 

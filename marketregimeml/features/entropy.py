@@ -2,15 +2,19 @@
 
 import numpy as np
 import pandas as pd
+
 # Optional Numba acceleration
 try:  # pragma: no cover - optional dependency
     from numba import jit
 except Exception:
+
     def jit(*args, **kwargs):  # type: ignore
         def wrapper(func):
             return func
 
         return wrapper
+
+
 from typing import Optional
 
 from marketregimeml.utils.logging import get_logger
@@ -195,9 +199,7 @@ class EntropyFeatures:
                 apen = _approximate_entropy_core(segment, m, r_scaled)
                 result[i] = apen
 
-        return pd.Series(
-            result, index=data.index, name=f"approximate_entropy_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"approximate_entropy_{window}")
 
     def sample_entropy(
         self, data: pd.Series, window: int = 100, m: int = 2, r: float = 0.2
@@ -230,9 +232,7 @@ class EntropyFeatures:
                 sampen = _sample_entropy_core(segment, m, r_scaled)
                 result[i] = sampen
 
-        return pd.Series(
-            result, index=data.index, name=f"sample_entropy_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"sample_entropy_{window}")
 
     def permutation_entropy(
         self, data: pd.Series, window: int = 100, order: int = 3
@@ -260,9 +260,7 @@ class EntropyFeatures:
             permen = _permutation_entropy_core(segment, order)
             result[i] = permen
 
-        return pd.Series(
-            result, index=data.index, name=f"permutation_entropy_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"permutation_entropy_{window}")
 
     def multiscale_entropy(
         self,
@@ -292,19 +290,13 @@ class EntropyFeatures:
             # Coarse-grain the time series
             if scale > 1:
                 # Average over non-overlapping windows of size 'scale'
-                coarse = data.rolling(window=scale, min_periods=scale).mean()[
-                    ::scale
-                ]
+                coarse = data.rolling(window=scale, min_periods=scale).mean()[::scale]
             else:
                 coarse = data.copy()
 
             # Calculate sample entropy for this scale
-            entropy = self.sample_entropy(
-                coarse, window=window // scale, m=m, r=r
-            )
-            results[f"mse_scale_{scale}"] = entropy.reindex(
-                data.index, method="ffill"
-            )
+            entropy = self.sample_entropy(coarse, window=window // scale, m=m, r=r)
+            results[f"mse_scale_{scale}"] = entropy.reindex(data.index, method="ffill")
 
         return pd.DataFrame(results, index=data.index)
 
@@ -359,9 +351,7 @@ class EntropyFeatures:
 
                 result[i] = entropy
 
-        return pd.Series(
-            result, index=data.index, name=f"shannon_entropy_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"shannon_entropy_{window}")
 
     def renyi_entropy(
         self,
@@ -451,9 +441,7 @@ class EntropyFeatures:
 
                 result[i] = entropy
 
-        return pd.Series(
-            result, index=data.index, name=f"spectral_entropy_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"spectral_entropy_{window}")
 
     def conditional_entropy(
         self, data: pd.Series, window: int = 100, bins: int = 10, lag: int = 1
@@ -500,9 +488,7 @@ class EntropyFeatures:
 
                 result[i_outer] = h_cond
 
-        return pd.Series(
-            result, index=data.index, name=f"conditional_entropy_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"conditional_entropy_{window}")
 
     def transfer_entropy(
         self,
@@ -543,9 +529,7 @@ class EntropyFeatures:
                 source_past = source_seg[:-lag].values
 
                 # Discretize
-                min_len = min(
-                    len(target_future), len(target_past), len(source_past)
-                )
+                min_len = min(len(target_future), len(target_past), len(source_past))
                 target_future = target_future[:min_len]
                 target_past = target_past[:min_len]
                 source_past = source_past[:min_len]
@@ -566,21 +550,15 @@ class EntropyFeatures:
                     p_tts = hist_tts / hist_tts.sum()
 
                     # Calculate entropies
-                    h_t_given_t = -np.sum(
-                        p_tt[p_tt > 0] * np.log2(p_tt[p_tt > 0])
-                    )
-                    h_t_given_ts = -np.sum(
-                        p_tts[p_tts > 0] * np.log2(p_tts[p_tts > 0])
-                    )
+                    h_t_given_t = -np.sum(p_tt[p_tt > 0] * np.log2(p_tt[p_tt > 0]))
+                    h_t_given_ts = -np.sum(p_tts[p_tts > 0] * np.log2(p_tts[p_tts > 0]))
 
                     te = h_t_given_t - h_t_given_ts
                     result[i] = max(0, te)  # Transfer entropy is non-negative
                 except Exception:
                     pass
 
-        return pd.Series(
-            result, index=target.index, name=f"transfer_entropy_{window}"
-        )
+        return pd.Series(result, index=target.index, name=f"transfer_entropy_{window}")
 
     def lempel_ziv_complexity(
         self, data: pd.Series, window: int = 100, threshold: float = 0
@@ -681,10 +659,7 @@ class EntropyFeatures:
                 for m in range(2, min(max_dim + 1, len(segment) // 2)):
                     # Embed time series
                     embedded = np.array(
-                        [
-                            segment[j : j + m]
-                            for j in range(len(segment) - m + 1)
-                        ]
+                        [segment[j : j + m] for j in range(len(segment) - m + 1)]
                     )
                     n_points = len(embedded)
 
@@ -695,11 +670,7 @@ class EntropyFeatures:
                             if np.linalg.norm(embedded[j] - embedded[k]) < r:
                                 c_r += 1
 
-                    c_r = (
-                        2 * c_r / (n_points * (n_points - 1))
-                        if n_points > 1
-                        else 0
-                    )
+                    c_r = 2 * c_r / (n_points * (n_points - 1)) if n_points > 1 else 0
 
                     if c_r > 0:
                         dimensions.append(m)
@@ -711,6 +682,4 @@ class EntropyFeatures:
                     slope, _ = np.polyfit(dimensions, correlation_sums, 1)
                     result[i] = abs(slope)
 
-        return pd.Series(
-            result, index=data.index, name=f"correlation_dim_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"correlation_dim_{window}")

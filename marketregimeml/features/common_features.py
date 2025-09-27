@@ -7,7 +7,6 @@ Following DRY principle to reduce code duplication.
 from typing import Union, Optional, Tuple
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 
 class PriceFeatures:
@@ -217,8 +216,7 @@ class StatisticalFeatures:
             return data.autocorr(lag=lag)
         else:
             return data.rolling(window=window).apply(
-                lambda x: pd.Series(x).autocorr(lag=lag),
-                raw=False
+                lambda x: pd.Series(x).autocorr(lag=lag), raw=False
             )
 
 
@@ -280,9 +278,7 @@ class RegimeFeatures:
         for regime in unique_regimes:
             regime_indicator = (regimes == regime).astype(float)
             frequencies[f"regime_{regime}_freq"] = (
-                pd.Series(regime_indicator)
-                .rolling(window=window, min_periods=1)
-                .mean()
+                pd.Series(regime_indicator).rolling(window=window, min_periods=1).mean()
             )
 
         return frequencies
@@ -314,16 +310,14 @@ class RegimeFeatures:
 
         # Rolling transition rate
         features["transition_rate"] = (
-            features["transition"]
-            .rolling(window=window, min_periods=1)
-            .mean()
+            features["transition"].rolling(window=window, min_periods=1).mean()
         )
 
         # Time since last transition
         time_since_transition = np.zeros_like(regimes, dtype=float)
         last_transition = 0
         for i in range(len(regimes)):
-            if i > 0 and regimes[i] != regimes[i-1]:
+            if i > 0 and regimes[i] != regimes[i - 1]:
                 last_transition = i
             time_since_transition[i] = i - last_transition
 
@@ -491,9 +485,9 @@ def select_non_correlated_features(
         Selected features
     """
     corr_matrix = features.corr().abs()
-    upper_tri = corr_matrix.where(
-        np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
-    )
+    upper_tri = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
 
-    to_drop = [column for column in upper_tri.columns if any(upper_tri[column] > threshold)]
+    to_drop = [
+        column for column in upper_tri.columns if any(upper_tri[column] > threshold)
+    ]
     return features.drop(columns=to_drop)

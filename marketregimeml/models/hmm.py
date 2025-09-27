@@ -360,9 +360,7 @@ class HMMRegimeDetector(BaseRegimeDetector):
             raise RuntimeError("All initializations failed")
 
         # Select best model
-        self.best_model_idx = self._select_best_model(
-            X_scaled, scores, select_best
-        )
+        self.best_model_idx = self._select_best_model(X_scaled, scores, select_best)
         self.model = self.models[self.best_model_idx]
         self.train_log_likelihood = scores[self.best_model_idx]
 
@@ -424,9 +422,7 @@ class HMMRegimeDetector(BaseRegimeDetector):
 
         return posteriors
 
-    def _reorder_regimes(
-        self, regimes: np.ndarray, features: np.ndarray
-    ) -> np.ndarray:
+    def _reorder_regimes(self, regimes: np.ndarray, features: np.ndarray) -> np.ndarray:
         """Reorder regimes by mean of first feature (typically returns).
 
         Args:
@@ -501,9 +497,7 @@ class HMMRegimeDetector(BaseRegimeDetector):
             if model is not None:
                 models.append(model)
                 scores.append(score)
-                logger.debug(
-                    f"Initialization {i+1}/{n_init}: score={score:.2f}"
-                )
+                logger.debug(f"Initialization {i+1}/{n_init}: score={score:.2f}")
 
         return models, scores
 
@@ -593,9 +587,7 @@ class HMMRegimeDetector(BaseRegimeDetector):
         n_params = 0
         n_components = model.n_components
         n_features = (
-            model.means_.shape[1]
-            if hasattr(model, "means_")
-            else self.n_features
+            model.means_.shape[1] if hasattr(model, "means_") else self.n_features
         )
 
         # Initial state probabilities
@@ -676,13 +668,9 @@ class HMMRegimeDetector(BaseRegimeDetector):
         self.diagnostics["bic"] = np.log(n_samples) * n_params - 2 * ll
 
         # Stability score (based on diagonal of transition matrix)
-        self.diagnostics["stability_score"] = np.mean(
-            np.diag(self.model.transmat_)
-        )
+        self.diagnostics["stability_score"] = np.mean(np.diag(self.model.transmat_))
 
-    def get_viterbi_path(
-        self, features: pd.DataFrame
-    ) -> Tuple[np.ndarray, float]:
+    def get_viterbi_path(self, features: pd.DataFrame) -> Tuple[np.ndarray, float]:
         """Get most likely state sequence using Viterbi algorithm.
 
         Args:
@@ -771,13 +759,9 @@ class HMMRegimeDetector(BaseRegimeDetector):
                 f"min_regimes ({min_regimes}) must be <= max_regimes ({max_regimes})"
             )
         if min_regimes < 2:
-            raise ValueError(
-                f"min_regimes must be at least 2, got {min_regimes}"
-            )
+            raise ValueError(f"min_regimes must be at least 2, got {min_regimes}")
         if criterion not in ["bic", "aic"]:
-            raise ValueError(
-                f"criterion must be 'bic' or 'aic', got {criterion}"
-            )
+            raise ValueError(f"criterion must be 'bic' or 'aic', got {criterion}")
 
         X = features.values if hasattr(features, "values") else features
         X_scaled = self.scaler.fit_transform(X)
@@ -825,16 +809,12 @@ class HMMRegimeDetector(BaseRegimeDetector):
                 )
 
             except Exception as e:
-                logger.warning(
-                    f"Failed to fit model with {n_regimes} regimes: {e}"
-                )
+                logger.warning(f"Failed to fit model with {n_regimes} regimes: {e}")
                 continue
 
         # Refit with optimal number of regimes
         self.n_regimes = best_n_regimes
-        self.fit(
-            features, n_init=n_init * 2
-        )  # More initializations for final fit
+        self.fit(features, n_init=n_init * 2)  # More initializations for final fit
 
         results["optimal_n_regimes"] = best_n_regimes
         results["optimal_score"] = best_score
@@ -867,9 +847,7 @@ class HMMRegimeDetector(BaseRegimeDetector):
             "custom": self._label_by_return_ranking,
         }
 
-        strategy = labeling_strategies.get(
-            method, self._label_by_return_ranking
-        )
+        strategy = labeling_strategies.get(method, self._label_by_return_ranking)
         labels = strategy(X, regimes)
 
         # Store labels
@@ -974,9 +952,7 @@ class HMMRegimeDetector(BaseRegimeDetector):
         else:  # Neutral returns
             return "Sideways_HighVol" if high_vol else "Sideways_Normal"
 
-    def _get_quantile_label(
-        self, mean_return: float, q25: float, q75: float
-    ) -> str:
+    def _get_quantile_label(self, mean_return: float, q25: float, q75: float) -> str:
         """Get label based on return quantiles."""
         if mean_return < q25:
             return "Bear_Market"
@@ -1044,9 +1020,7 @@ class HMMRegimeDetector(BaseRegimeDetector):
                 continue
 
             regime_data = X[mask]
-            regime_name = self.regime_names.get(
-                regime_id, f"Regime_{regime_id}"
-            )
+            regime_name = self.regime_names.get(regime_id, f"Regime_{regime_id}")
 
             # Calculate statistics
             stat_dict = {
@@ -1063,17 +1037,11 @@ class HMMRegimeDetector(BaseRegimeDetector):
                 stat_dict[f"{feat_name}_std"] = feat_data.std()
                 stat_dict[f"{feat_name}_min"] = feat_data.min()
                 stat_dict[f"{feat_name}_max"] = feat_data.max()
-                stat_dict[f"{feat_name}_skew"] = self._calculate_skewness(
-                    feat_data
-                )
-                stat_dict[f"{feat_name}_kurtosis"] = self._calculate_kurtosis(
-                    feat_data
-                )
+                stat_dict[f"{feat_name}_skew"] = self._calculate_skewness(feat_data)
+                stat_dict[f"{feat_name}_kurtosis"] = self._calculate_kurtosis(feat_data)
 
             # Calculate regime duration statistics
-            durations = self._calculate_single_regime_durations(
-                regimes, regime_id
-            )
+            durations = self._calculate_single_regime_durations(regimes, regime_id)
             if durations:
                 stat_dict["avg_duration"] = np.mean(durations)
                 stat_dict["max_duration"] = np.max(durations)

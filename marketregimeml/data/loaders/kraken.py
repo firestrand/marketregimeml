@@ -84,7 +84,6 @@ class KrakenDataLoader(MarketDataLoader):
         No API key required for public market data.
         """
         # Kraken public API doesn't require authentication
-        pass
 
     def _normalize_pair(self, symbol: str) -> str:
         """
@@ -104,9 +103,7 @@ class KrakenDataLoader(MarketDataLoader):
 
         # Try to handle other formats
         # Remove common separators
-        cleaned = (
-            symbol_upper.replace("/", "").replace("_", "").replace("-", "")
-        )
+        cleaned = symbol_upper.replace("/", "").replace("_", "").replace("-", "")
 
         # Common crypto to Kraken format
         if cleaned.startswith("BTC"):
@@ -203,9 +200,7 @@ class KrakenDataLoader(MarketDataLoader):
             )
 
             # Convert timestamp to datetime index
-            df["timestamp"] = pd.to_datetime(
-                df["timestamp"], unit="s", utc=True
-            )
+            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s", utc=True)
             df.set_index("timestamp", inplace=True)
 
             # Convert price/volume columns to float

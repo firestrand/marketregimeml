@@ -21,9 +21,7 @@ class RegimeMetrics:
     """Clustering and regime detection specific metrics."""
 
     @staticmethod
-    def adjusted_rand_index(
-        true_labels: np.ndarray, pred_labels: np.ndarray
-    ) -> float:
+    def adjusted_rand_index(true_labels: np.ndarray, pred_labels: np.ndarray) -> float:
         """Calculate Adjusted Rand Index.
 
         Measures agreement between two clusterings, adjusted for chance.
@@ -57,9 +55,7 @@ class RegimeMetrics:
         return normalized_mutual_info_score(true_labels, pred_labels)
 
     @staticmethod
-    def adjusted_mutual_info(
-        true_labels: np.ndarray, pred_labels: np.ndarray
-    ) -> float:
+    def adjusted_mutual_info(true_labels: np.ndarray, pred_labels: np.ndarray) -> float:
         """Calculate Adjusted Mutual Information.
 
         Measures mutual information adjusted for chance.
@@ -74,9 +70,7 @@ class RegimeMetrics:
         return adjusted_mutual_info_score(true_labels, pred_labels)
 
     @staticmethod
-    def silhouette_coefficient(
-        features: np.ndarray, labels: np.ndarray
-    ) -> float:
+    def silhouette_coefficient(features: np.ndarray, labels: np.ndarray) -> float:
         """Calculate Silhouette Coefficient.
 
         Measures how similar samples are to their own cluster vs other clusters.
@@ -94,9 +88,7 @@ class RegimeMetrics:
         return 0.0
 
     @staticmethod
-    def davies_bouldin_index(
-        features: np.ndarray, labels: np.ndarray
-    ) -> float:
+    def davies_bouldin_index(features: np.ndarray, labels: np.ndarray) -> float:
         """Calculate Davies-Bouldin Index.
 
         Measures average similarity between clusters. Lower is better.
@@ -113,9 +105,7 @@ class RegimeMetrics:
         return np.inf
 
     @staticmethod
-    def calinski_harabasz_index(
-        features: np.ndarray, labels: np.ndarray
-    ) -> float:
+    def calinski_harabasz_index(features: np.ndarray, labels: np.ndarray) -> float:
         """Calculate Calinski-Harabasz Index.
 
         Measures ratio of between-cluster to within-cluster variance.
@@ -144,9 +134,7 @@ class RegimeMetrics:
         """
         # Transition rate
         transitions = np.sum(np.diff(labels) != 0)
-        transition_rate = (
-            transitions / (len(labels) - 1) if len(labels) > 1 else 0
-        )
+        transition_rate = transitions / (len(labels) - 1) if len(labels) > 1 else 0
 
         # Average regime duration
         durations = []
@@ -202,9 +190,9 @@ class RegimeMetrics:
         sorted_props = np.sort(proportions)
         n = len(sorted_props)
         index = np.arange(1, n + 1)
-        gini = (2 * np.sum(index * sorted_props)) / (
-            n * np.sum(sorted_props)
-        ) - (n + 1) / n
+        gini = (2 * np.sum(index * sorted_props)) / (n * np.sum(sorted_props)) - (
+            n + 1
+        ) / n
 
         return {
             "regime_counts": counts,
@@ -232,17 +220,13 @@ class RegimeMetrics:
         confidence_std = np.std(max_probs)
 
         # Entropy-based uncertainty
-        entropy = -np.sum(
-            probabilities * np.log(probabilities + 1e-10), axis=1
-        )
+        entropy = -np.sum(probabilities * np.log(probabilities + 1e-10), axis=1)
         avg_entropy = np.mean(entropy)
 
         # Normalized entropy
         n_regimes = probabilities.shape[1]
         max_entropy = np.log(n_regimes)
-        normalized_entropy = (
-            avg_entropy / max_entropy if max_entropy > 0 else 0
-        )
+        normalized_entropy = avg_entropy / max_entropy if max_entropy > 0 else 0
 
         # Margin (difference between top two probabilities)
         sorted_probs = np.sort(probabilities, axis=1)
@@ -277,9 +261,7 @@ class RegimeMetrics:
         # Local temporal consistency
         local_consistencies = []
         for i in range(window_size, n_samples - window_size):
-            window = predictions[
-                i - window_size // 2 : i + window_size // 2 + 1
-            ]
+            window = predictions[i - window_size // 2 : i + window_size // 2 + 1]
             # Consistency = fraction of predictions that match the center prediction
             center_pred = predictions[i]
             consistency = np.mean(window == center_pred)
@@ -307,9 +289,7 @@ class RegimeMetrics:
         if len(predictions) > 1:
             # Convert to numeric for autocorrelation
             numeric_preds = predictions.astype(float)
-            autocorr_lag1 = np.corrcoef(numeric_preds[:-1], numeric_preds[1:])[
-                0, 1
-            ]
+            autocorr_lag1 = np.corrcoef(numeric_preds[:-1], numeric_preds[1:])[0, 1]
             autocorr_lag1 = 0 if np.isnan(autocorr_lag1) else autocorr_lag1
         else:
             autocorr_lag1 = 0
@@ -347,9 +327,7 @@ class RegimeMetrics:
             Regime Quality Index (0-100, higher is better)
         """
         # Clustering quality (weight: 30%)
-        silhouette = RegimeMetrics.silhouette_coefficient(
-            features, predictions
-        )
+        silhouette = RegimeMetrics.silhouette_coefficient(features, predictions)
         silhouette_score = max(0, (silhouette + 1) / 2)  # Normalize to 0-1
 
         # Prediction confidence (weight: 20%)
@@ -357,9 +335,7 @@ class RegimeMetrics:
         confidence_score = confidence_metrics["avg_confidence"]
 
         # Temporal consistency (weight: 25%)
-        temporal_metrics = RegimeMetrics.temporal_consistency_metrics(
-            predictions
-        )
+        temporal_metrics = RegimeMetrics.temporal_consistency_metrics(predictions)
         temporal_score = temporal_metrics["avg_local_consistency"]
 
         # Regime balance (weight: 15%)
@@ -379,9 +355,7 @@ class RegimeMetrics:
                 return_separation = np.std(regime_return_means)
                 # Normalize by overall return volatility
                 overall_vol = np.std(returns)
-                financial_score = min(
-                    1.0, return_separation / (overall_vol + 1e-8)
-                )
+                financial_score = min(1.0, return_separation / (overall_vol + 1e-8))
             else:
                 financial_score = 0
 

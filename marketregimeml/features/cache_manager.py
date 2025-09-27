@@ -58,7 +58,9 @@ class FeatureCacheManager:
             }
 
             cache_string = json.dumps(cache_dict, sort_keys=True, default=str)
-            return hashlib.md5(cache_string.encode(), usedforsecurity=False).hexdigest()[:16]
+            return hashlib.md5(
+                cache_string.encode(), usedforsecurity=False
+            ).hexdigest()[:16]
 
         except Exception as e:
             logger.warning(f"Failed to generate cache key: {e}")

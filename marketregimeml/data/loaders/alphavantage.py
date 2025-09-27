@@ -51,9 +51,7 @@ class AlphaVantageLoader(MarketDataLoader):
         # Get API key from environment
         self.api_key = os.getenv("ALPHAVANTAGE_API_KEY")
         if not self.api_key:
-            raise ValueError(
-                "ALPHAVANTAGE_API_KEY environment variable not set"
-            )
+            raise ValueError("ALPHAVANTAGE_API_KEY environment variable not set")
 
         # API settings
         self.base_url = "https://www.alphavantage.co/query"
@@ -64,9 +62,7 @@ class AlphaVantageLoader(MarketDataLoader):
         self.call_times = []
 
         # Additional rate limit attributes for compatibility
-        self.min_request_interval = (
-            12.5  # 60 seconds / 5 calls = 12 seconds minimum
-        )
+        self.min_request_interval = 12.5  # 60 seconds / 5 calls = 12 seconds minimum
         self.daily_call_limit = 500  # Free tier limit
 
         # Initialize parent class
@@ -87,16 +83,12 @@ class AlphaVantageLoader(MarketDataLoader):
 
         # Remove old call times
         self.call_times = [
-            t
-            for t in self.call_times
-            if current_time - t < self.rate_limit_period
+            t for t in self.call_times if current_time - t < self.rate_limit_period
         ]
 
         # If we've made too many calls, wait
         if len(self.call_times) >= self.rate_limit_calls:
-            wait_time = self.rate_limit_period - (
-                current_time - self.call_times[0]
-            )
+            wait_time = self.rate_limit_period - (current_time - self.call_times[0])
             if wait_time > 0:
                 logger.debug(f"Rate limiting: waiting {wait_time:.1f} seconds")
                 time.sleep(wait_time)
@@ -173,9 +165,7 @@ class AlphaVantageLoader(MarketDataLoader):
                 "high": float(values.get("2. high", 0)),
                 "low": float(values.get("3. low", 0)),
                 "close": float(values.get("4. close", 0)),
-                "volume": float(
-                    values.get("5. volume", values.get("6. volume", 0))
-                ),
+                "volume": float(values.get("5. volume", values.get("6. volume", 0))),
             }
 
             # Add adjusted close if available
@@ -311,9 +301,7 @@ class AlphaVantageLoader(MarketDataLoader):
 
         for symbol in symbols:
             try:
-                df = self.fetch_ohlcv(
-                    symbol, timeframe, start_date, end_date, limit
-                )
+                df = self.fetch_ohlcv(symbol, timeframe, start_date, end_date, limit)
                 result[symbol] = df
             except Exception as e:
                 logger.error(f"Failed to fetch data for {symbol}: {e}")
@@ -381,6 +369,4 @@ class AlphaVantageLoader(MarketDataLoader):
         Raises:
             NotImplementedError: Alpha Vantage doesn't support streaming
         """
-        raise NotImplementedError(
-            "Alpha Vantage does not support streaming data"
-        )
+        raise NotImplementedError("Alpha Vantage does not support streaming data")

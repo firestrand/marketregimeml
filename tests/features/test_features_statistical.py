@@ -25,13 +25,9 @@ class TestStatisticalFeatures:
             "heavy_tailed": pd.Series(np.random.standard_t(3, 100)),
             "uniform": pd.Series(np.random.uniform(-5, 5, 100)),
             "bimodal": pd.Series(
-                np.concatenate(
-                    [np.random.randn(50) - 2, np.random.randn(50) + 2]
-                )
+                np.concatenate([np.random.randn(50) - 2, np.random.randn(50) + 2])
             ),
-            "trending": pd.Series(
-                np.linspace(0, 10, 100) + np.random.randn(100) * 0.5
-            ),
+            "trending": pd.Series(np.linspace(0, 10, 100) + np.random.randn(100) * 0.5),
         }
 
     def test_skewness(self, stat_calc, test_data):

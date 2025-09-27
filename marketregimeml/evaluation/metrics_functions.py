@@ -94,9 +94,7 @@ def regime_duration_stats(regimes: np.ndarray) -> Dict[int, Dict[str, float]]:
         durations = np.array(durations)
         duration_stats[regime] = {
             "mean_duration": float(np.mean(durations)),
-            "std_duration": (
-                float(np.std(durations)) if len(durations) > 1 else 0.0
-            ),
+            "std_duration": (float(np.std(durations)) if len(durations) > 1 else 0.0),
             "min_duration": float(np.min(durations)),
             "max_duration": float(np.max(durations)),
             "count": len(durations),
@@ -105,9 +103,7 @@ def regime_duration_stats(regimes: np.ndarray) -> Dict[int, Dict[str, float]]:
     return duration_stats
 
 
-def regime_stability(
-    regimes: np.ndarray, window: Optional[int] = None
-) -> float:
+def regime_stability(regimes: np.ndarray, window: Optional[int] = None) -> float:
     """Calculate regime stability score.
 
     Stability is measured as 1 - (number of transitions / possible transitions).
@@ -131,9 +127,7 @@ def regime_stability(
     return stability
 
 
-def adjusted_rand_index(
-    true_labels: np.ndarray, pred_labels: np.ndarray
-) -> float:
+def adjusted_rand_index(true_labels: np.ndarray, pred_labels: np.ndarray) -> float:
     """Calculate Adjusted Rand Index.
 
     Args:
@@ -146,9 +140,7 @@ def adjusted_rand_index(
     return sklearn_ari(true_labels, pred_labels)
 
 
-def normalized_mutual_info(
-    true_labels: np.ndarray, pred_labels: np.ndarray
-) -> float:
+def normalized_mutual_info(true_labels: np.ndarray, pred_labels: np.ndarray) -> float:
     """Calculate Normalized Mutual Information.
 
     Args:
@@ -161,9 +153,7 @@ def normalized_mutual_info(
     return sklearn_nmi(true_labels, pred_labels)
 
 
-def silhouette_score_regimes(
-    features: np.ndarray, labels: np.ndarray
-) -> float:
+def silhouette_score_regimes(features: np.ndarray, labels: np.ndarray) -> float:
     """Calculate silhouette score for regime clustering.
 
     Args:
@@ -179,9 +169,7 @@ def silhouette_score_regimes(
     return silhouette_score(features, labels)
 
 
-def davies_bouldin_score_regimes(
-    features: np.ndarray, labels: np.ndarray
-) -> float:
+def davies_bouldin_score_regimes(features: np.ndarray, labels: np.ndarray) -> float:
     """Calculate Davies-Bouldin score for regime clustering.
 
     Lower values indicate better clustering.
@@ -199,9 +187,7 @@ def davies_bouldin_score_regimes(
     return davies_bouldin_score(features, labels)
 
 
-def calinski_harabasz_score_regimes(
-    features: np.ndarray, labels: np.ndarray
-) -> float:
+def calinski_harabasz_score_regimes(features: np.ndarray, labels: np.ndarray) -> float:
     """Calculate Calinski-Harabasz score for regime clustering.
 
     Higher values indicate better clustering.
@@ -274,9 +260,7 @@ def regime_separation_score(features: np.ndarray, labels: np.ndarray) -> float:
     return avg_inter / avg_intra
 
 
-def regime_purity_score(
-    true_labels: np.ndarray, pred_labels: np.ndarray
-) -> float:
+def regime_purity_score(true_labels: np.ndarray, pred_labels: np.ndarray) -> float:
     """Calculate purity score for regime predictions.
 
     Args:
@@ -304,9 +288,7 @@ def regime_purity_score(
     return total_correct / len(true_labels)
 
 
-def regime_consistency_score(
-    regimes: np.ndarray, min_duration: int = 5
-) -> float:
+def regime_consistency_score(regimes: np.ndarray, min_duration: int = 5) -> float:
     """Calculate regime consistency score.
 
     Measures how consistent regime assignments are (avoiding rapid switching).
@@ -373,9 +355,7 @@ def regime_prediction_metrics(
         metrics.update(
             {
                 "silhouette": silhouette_score_regimes(features, pred_labels),
-                "davies_bouldin": davies_bouldin_score_regimes(
-                    features, pred_labels
-                ),
+                "davies_bouldin": davies_bouldin_score_regimes(features, pred_labels),
                 "calinski_harabasz": calinski_harabasz_score_regimes(
                     features, pred_labels
                 ),

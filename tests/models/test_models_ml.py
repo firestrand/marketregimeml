@@ -55,9 +55,7 @@ class TestRandomForestRegimeClassifier:
         features_df = pd.DataFrame(
             features, columns=[f"feature_{i}" for i in range(n_features)]
         )
-        features_df.index = pd.date_range(
-            "2020-01-01", periods=n_samples, freq="D"
-        )
+        features_df.index = pd.date_range("2020-01-01", periods=n_samples, freq="D")
 
         return features_df, np.array(true_regimes)
 
@@ -165,9 +163,7 @@ class TestRandomForestRegimeClassifier:
         assert abs(sum(importances.values()) - 1.0) < 0.01  # Should sum to 1
 
         # First two features should be most important (by design)
-        top_features = sorted(
-            importances.items(), key=lambda x: x[1], reverse=True
-        )
+        top_features = sorted(importances.items(), key=lambda x: x[1], reverse=True)
         assert "feature_0" in [f[0] for f in top_features[:3]]
         assert "feature_1" in [f[0] for f in top_features[:3]]
 
@@ -461,9 +457,7 @@ class TestSVMRegimeClassifier:
 
         # Should have support vectors for each class
         assert len(support_info["n_support"]) == 3
-        assert sum(support_info["n_support"]) == len(
-            support_info["support_indices"]
-        )
+        assert sum(support_info["n_support"]) == len(support_info["support_indices"])
 
     def test_kernel_comparison(self, sample_features):
         """Test different kernel performance."""
@@ -498,9 +492,7 @@ class TestSVMRegimeClassifier:
         clf_unbalanced.fit(features, y=imbalanced_regimes)
 
         # With class weight
-        clf_balanced = SVMRegimeClassifier(
-            class_weight="balanced", random_state=42
-        )
+        clf_balanced = SVMRegimeClassifier(class_weight="balanced", random_state=42)
         clf_balanced.fit(features, y=imbalanced_regimes)
 
         # Both should fit

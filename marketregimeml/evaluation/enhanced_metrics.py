@@ -46,9 +46,7 @@ class EnhancedRegimeMetrics:
 
         return float(flip_rate)
 
-    def calculate_flip_rate_by_regime(
-        self, regimes: np.ndarray
-    ) -> Dict[int, float]:
+    def calculate_flip_rate_by_regime(self, regimes: np.ndarray) -> Dict[int, float]:
         """
         Calculate flip rate for each regime.
 
@@ -78,9 +76,7 @@ class EnhancedRegimeMetrics:
                     transitions += 1
 
             # Calculate flip rate for this regime
-            regime_flip_rates[int(regime_id)] = transitions / len(
-                regime_positions
-            )
+            regime_flip_rates[int(regime_id)] = transitions / len(regime_positions)
 
         return regime_flip_rates
 
@@ -295,9 +291,7 @@ class EnhancedRegimeMetrics:
             for i in range(window_size, len(regime_features)):
                 window = regime_features[i - window_size : i]
                 if len(window) > 1 and window.shape[1] > 1:
-                    corr = np.corrcoef(window.T)[
-                        0, 1
-                    ]  # Use first two features
+                    corr = np.corrcoef(window.T)[0, 1]  # Use first two features
                     if not np.isnan(corr):
                         correlations.append(corr)
 
@@ -353,9 +347,7 @@ class EnhancedRegimeMetrics:
         components["stability_score"] = 1.0 - flip_rate
 
         # 3. Confidence score (probability purity)
-        components["confidence_score"] = self.calculate_regime_purity(
-            probabilities
-        )
+        components["confidence_score"] = self.calculate_regime_purity(probabilities)
 
         # 4. Persistence score
         persistence = self.calculate_persistence(regimes)
@@ -365,9 +357,7 @@ class EnhancedRegimeMetrics:
         )
 
         # 5. Consistency score
-        components["consistency_score"] = self.calculate_temporal_consistency(
-            regimes
-        )
+        components["consistency_score"] = self.calculate_temporal_consistency(regimes)
 
         # Calculate weighted overall score
         weights = {
@@ -379,15 +369,11 @@ class EnhancedRegimeMetrics:
         }
 
         overall_score = sum(
-            components[key] * weights[key]
-            for key in weights
-            if key in components
+            components[key] * weights[key] for key in weights if key in components
         )
 
         return {
-            "overall_score": float(
-                overall_score * 100
-            ),  # Convert to 0-100 scale
+            "overall_score": float(overall_score * 100),  # Convert to 0-100 scale
             "components": components,
         }
 
@@ -538,12 +524,8 @@ class EnhancedRegimeMetrics:
             "flip_rate": flip_rate,
             "flip_rate_by_regime": self.calculate_flip_rate_by_regime(regimes),
             "persistence": persistence,
-            "persistence_by_regime": self.calculate_persistence_by_regime(
-                regimes
-            ),
-            "temporal_consistency": self.calculate_temporal_consistency(
-                regimes
-            ),
+            "persistence_by_regime": self.calculate_persistence_by_regime(regimes),
+            "temporal_consistency": self.calculate_temporal_consistency(regimes),
         }
 
         # Quality metrics
@@ -557,9 +539,7 @@ class EnhancedRegimeMetrics:
             ),
             "regime_entropy": self.calculate_regime_entropy(regimes),
             "regime_purity": self.calculate_regime_purity(probabilities),
-            "regime_separation": self.calculate_regime_separation(
-                features, regimes
-            ),
+            "regime_separation": self.calculate_regime_separation(features, regimes),
         }
 
         # Recommendations
@@ -569,13 +549,9 @@ class EnhancedRegimeMetrics:
                 "High flip rate detected - consider smoothing or different model"
             )
         if persistence["mean_duration"] < 10:
-            recommendations.append(
-                "Low persistence - regimes may be too sensitive"
-            )
+            recommendations.append("Low persistence - regimes may be too sensitive")
         if quality["overall_score"] < 50:
-            recommendations.append(
-                "Low quality score - consider parameter tuning"
-            )
+            recommendations.append("Low quality score - consider parameter tuning")
 
         report["recommendations"] = recommendations
 

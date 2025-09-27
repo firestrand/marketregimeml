@@ -4,7 +4,7 @@ Following SOLID principles with mixins and interfaces.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any, List, Union
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 import warnings
 
@@ -196,7 +196,6 @@ class BaseRegimeDetector(
         float
             Log-likelihood value
         """
-        pass
 
     @abstractmethod
     def _count_parameters(self) -> int:
@@ -209,7 +208,6 @@ class BaseRegimeDetector(
         int
             Number of parameters
         """
-        pass
 
     def get_regime_confidence(self, features: pd.DataFrame) -> pd.DataFrame:
         """Get confidence scores for regime assignments.

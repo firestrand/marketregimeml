@@ -39,9 +39,7 @@ class TestModelPersistence:
             X[i : i + 100] += regime * 2
 
         # Convert to DataFrame as expected by models
-        df = pd.DataFrame(
-            X, columns=[f"feature_{i}" for i in range(n_features)]
-        )
+        df = pd.DataFrame(X, columns=[f"feature_{i}" for i in range(n_features)])
         return df
 
     @pytest.fixture
@@ -80,9 +78,7 @@ class TestModelPersistence:
 
         # Check parameters are preserved
         assert params_before["n_regimes"] == params_after["n_regimes"]
-        assert (
-            params_before["covariance_type"] == params_after["covariance_type"]
-        )
+        assert params_before["covariance_type"] == params_after["covariance_type"]
 
     def test_gmm_save_load(self, sample_data, temp_dir):
         """Test GMM model save and load functionality."""
@@ -135,16 +131,12 @@ class TestModelPersistence:
 
         # Check predictions are similar (may have small differences due to clustering)
         accuracy = np.mean(predictions_before == predictions_after)
-        assert (
-            accuracy > 0.9
-        )  # Allow some variation due to clustering initialization
+        assert accuracy > 0.9  # Allow some variation due to clustering initialization
 
     def test_xgboost_save_load(self, sample_data, temp_dir):
         """Test XGBoost model save and load functionality."""
         # Train model
-        model = XGBoostRegimeClassifier(
-            n_regimes=3, n_estimators=50, random_state=42
-        )
+        model = XGBoostRegimeClassifier(n_regimes=3, n_estimators=50, random_state=42)
         model.fit(sample_data)
 
         # Get predictions before saving
@@ -231,9 +223,7 @@ class TestModelPersistence:
         # Test joblib format
         joblib_path = os.path.join(temp_dir, "model.joblib")
         model.save_model(joblib_path, format="joblib")
-        loaded_joblib = GMMRegimeDetector.load_model(
-            joblib_path, format="joblib"
-        )
+        loaded_joblib = GMMRegimeDetector.load_model(joblib_path, format="joblib")
         assert loaded_joblib is not None
 
         # Both should give same predictions
@@ -269,12 +259,8 @@ class TestModelPersistence:
         model_v2.save_model(path_v2, metadata={"version": "2.0"})
 
         # Load both versions
-        loaded_v1, meta_v1 = HMMRegimeDetector.load_model(
-            path_v1, return_metadata=True
-        )
-        loaded_v2, meta_v2 = HMMRegimeDetector.load_model(
-            path_v2, return_metadata=True
-        )
+        loaded_v1, meta_v1 = HMMRegimeDetector.load_model(path_v1, return_metadata=True)
+        loaded_v2, meta_v2 = HMMRegimeDetector.load_model(path_v2, return_metadata=True)
 
         # Verify versions
         assert meta_v1["version"] == "1.0"
@@ -305,12 +291,8 @@ class TestModelPersistence:
         assert compressed_size < uncompressed_size
 
         # Both should load correctly
-        loaded_uncompressed = RandomForestRegimeClassifier.load_model(
-            uncompressed_path
-        )
-        loaded_compressed = RandomForestRegimeClassifier.load_model(
-            compressed_path
-        )
+        loaded_uncompressed = RandomForestRegimeClassifier.load_model(uncompressed_path)
+        loaded_compressed = RandomForestRegimeClassifier.load_model(compressed_path)
 
         # Both should give same predictions
         pred_uncompressed = loaded_uncompressed.predict(sample_data)
@@ -339,7 +321,4 @@ class TestModelPersistence:
             assert loaded is not None
         except Exception as e:
             # Should provide helpful error message
-            assert (
-                "version" in str(e).lower()
-                or "compatibility" in str(e).lower()
-            )
+            assert "version" in str(e).lower() or "compatibility" in str(e).lower()

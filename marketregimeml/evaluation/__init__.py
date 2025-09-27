@@ -26,7 +26,7 @@ try:
         regime_consistency_score,
         regime_prediction_metrics,
     )
-except Exception:
+except ImportError:
     # Some environments may not include all functional metrics
     pass
 
@@ -35,6 +35,7 @@ try:  # pragma: no cover - optional dependency
     from marketregimeml.evaluation.enhanced_metrics import (
         EnhancedRegimeMetrics,
     )
+
     _ENHANCED_METRICS_AVAILABLE = True
 except Exception:  # ImportError or missing extras
     EnhancedRegimeMetrics = None  # type: ignore
@@ -52,24 +53,20 @@ class RegimeEvaluator:
         self,
         model,
         features,
-        true_regimes: Optional["np.ndarray"] = None,  # type: ignore[name-defined]
+        true_regimes=None,
     ) -> Dict[str, Any]:
         evaluator = ModelEvaluator(model)
         results = evaluator.evaluate_model(features, true_regimes)
 
         out: Dict[str, Any] = {
-            "silhouette_score": results["clustering_metrics"].get(
-                "silhouette_score"
-            ),
+            "silhouette_score": results["clustering_metrics"].get("silhouette_score"),
             "davies_bouldin_index": results["clustering_metrics"].get(
                 "davies_bouldin_index"
             ),
             "calinski_harabasz_index": results["clustering_metrics"].get(
                 "calinski_harabasz_index"
             ),
-            "avg_confidence": results["clustering_metrics"].get(
-                "avg_confidence"
-            ),
+            "avg_confidence": results["clustering_metrics"].get("avg_confidence"),
             # Use persistence (1 - transition_rate) as scalar stability index
             "regime_stability": results["regime_analysis"]["stability"].get(
                 "persistence"

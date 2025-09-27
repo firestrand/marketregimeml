@@ -180,9 +180,7 @@ class GMMRegimeDetector(BaseRegimeDetector):
             X_scaled: Scaled feature matrix
             max_components: Maximum number of components to test
         """
-        n_regimes_range = range(
-            2, min(max_components + 1, len(X_scaled) // 10)
-        )
+        n_regimes_range = range(2, min(max_components + 1, len(X_scaled) // 10))
 
         aic_scores = []
         bic_scores = []
@@ -209,9 +207,7 @@ class GMMRegimeDetector(BaseRegimeDetector):
             aic_scores.append(aic)
             bic_scores.append(bic)
 
-            logger.debug(
-                f"n_regimes={n_regimes_test}: AIC={aic:.2f}, BIC={bic:.2f}"
-            )
+            logger.debug(f"n_regimes={n_regimes_test}: AIC={aic:.2f}, BIC={bic:.2f}")
 
         # Select based on BIC (more conservative)
         if len(bic_scores) > 0:
@@ -290,9 +286,7 @@ class GMMRegimeDetector(BaseRegimeDetector):
 
         return proba
 
-    def _reorder_regimes(
-        self, regimes: np.ndarray, features: np.ndarray
-    ) -> np.ndarray:
+    def _reorder_regimes(self, regimes: np.ndarray, features: np.ndarray) -> np.ndarray:
         """Reorder regimes by mean of first feature.
 
         Args:
@@ -359,9 +353,7 @@ class GMMRegimeDetector(BaseRegimeDetector):
 
         # Covariances
         if self.covariance_type == "full":
-            n_params += (
-                self.n_regimes * self.n_features * (self.n_features + 1) // 2
-            )
+            n_params += self.n_regimes * self.n_features * (self.n_features + 1) // 2
         elif self.covariance_type == "diag":
             n_params += self.n_regimes * self.n_features
         elif self.covariance_type == "tied":
@@ -412,9 +404,7 @@ class GMMRegimeDetector(BaseRegimeDetector):
         # Model selection criteria
         self.diagnostics["aic"] = self.model.aic(features)
         self.diagnostics["bic"] = self.model.bic(features)
-        self.diagnostics["log_likelihood"] = self.model.score(features) * len(
-            features
-        )
+        self.diagnostics["log_likelihood"] = self.model.score(features) * len(features)
 
         # Separation quality
         self._calculate_separation_metrics(features, regimes, proba)
@@ -571,9 +561,7 @@ class GMMRegimeDetector(BaseRegimeDetector):
         threshold = np.percentile(outlier_scores, threshold_percentile)
 
         # Create Series
-        scores = pd.Series(
-            outlier_scores, index=features.index, name="outlier_score"
-        )
+        scores = pd.Series(outlier_scores, index=features.index, name="outlier_score")
 
         # Add threshold info
         scores.attrs["threshold"] = threshold

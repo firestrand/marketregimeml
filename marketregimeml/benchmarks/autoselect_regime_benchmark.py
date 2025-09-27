@@ -6,9 +6,8 @@ RQI metrics.
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict
 
-import numpy as np
 import pandas as pd
 
 from marketregimeml.evaluation.metrics import RegimeMetrics
@@ -37,7 +36,9 @@ def load_eurusd_m5(limit_days: int = 730) -> pd.DataFrame:
     return loader.fetch_ohlcv("EUR_USD", "M5", start, end)
 
 
-def compare_autoselect(features: pd.DataFrame, model_name: str, criteria: str = "aic") -> Dict:
+def compare_autoselect(
+    features: pd.DataFrame, model_name: str, criteria: str = "aic"
+) -> Dict:
     metrics = RegimeMetrics()
 
     if model_name == "HMM":
@@ -97,7 +98,9 @@ def run():
             results[(model, criteria)] = res
             print(
                 f"optimal_n={int(res['optimal_n'])}, RQI_auto={res['rqi_auto']:.1f}, "
-                + ", ".join([f"n={n}:{res[f'rqi_fixed_{n}']:.1f}" for n in [2,3,4,5]])
+                + ", ".join(
+                    [f"n={n}:{res[f'rqi_fixed_{n}']:.1f}" for n in [2, 3, 4, 5]]
+                )
             )
 
     # Save markdown summary
@@ -107,7 +110,7 @@ def run():
         lines.append(
             f"- optimal_n: {int(res['optimal_n'])}\n- RQI(auto): {res['rqi_auto']:.1f}\n"
             + "- RQI(fixed): "
-            + ", ".join([f"n={n}:{res[f'rqi_fixed_{n}']:.1f}" for n in [2,3,4,5]])
+            + ", ".join([f"n={n}:{res[f'rqi_fixed_{n}']:.1f}" for n in [2, 3, 4, 5]])
         )
         lines.append("")
 
@@ -122,4 +125,3 @@ def run():
 
 if __name__ == "__main__":
     run()
-

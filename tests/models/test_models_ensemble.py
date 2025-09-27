@@ -22,7 +22,7 @@ class TestVotingEnsemble:
 
         data = pd.DataFrame(
             np.random.randn(n_samples, n_features),
-            columns=[f'feature_{i}' for i in range(n_features)]
+            columns=[f"feature_{i}" for i in range(n_features)],
         )
         return data
 
@@ -35,11 +35,7 @@ class TestVotingEnsemble:
 
     def test_initialization_with_params(self):
         """Test initialization with parameters."""
-        ensemble = VotingEnsemble(
-            n_regimes=5,
-            voting="soft",
-            random_state=42
-        )
+        ensemble = VotingEnsemble(n_regimes=5, voting="soft", random_state=42)
         assert ensemble.n_regimes == 5
         assert ensemble.voting == "soft"
         assert ensemble.random_state == 42
@@ -78,7 +74,7 @@ class TestVotingEnsemble:
         # Create real models
         models = [
             HMMRegimeDetector(n_regimes=2, random_state=42),
-            GMMRegimeDetector(n_regimes=2, random_state=42)
+            GMMRegimeDetector(n_regimes=2, random_state=42),
         ]
 
         ensemble = VotingEnsemble(models=models, n_regimes=2)
@@ -93,9 +89,6 @@ class TestVotingEnsemble:
 
         # Custom weights
         weights = [0.6, 0.4]
-        ensemble_weighted = VotingEnsemble(
-            n_regimes=3,
-            weights=weights
-        )
+        ensemble_weighted = VotingEnsemble(n_regimes=3, weights=weights)
         # Weights might be normalized or adjusted
         assert ensemble_weighted.weights is not None

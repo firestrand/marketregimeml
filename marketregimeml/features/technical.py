@@ -20,7 +20,6 @@ logger = get_logger(__name__)
 __all__ = ["TechnicalIndicators"]
 
 
-
 class TechnicalIndicators(BaseFeatureCalculator):
     """Technical indicator calculators for market analysis.
 
@@ -50,19 +49,21 @@ class TechnicalIndicators(BaseFeatureCalculator):
         features = pd.DataFrame(index=data.index)
 
         # Add specialized indicators only
-        if 'close' in data.columns and 'volume' in data.columns:
-            features['obv'] = self.obv(data['close'], data['volume'])
+        if "close" in data.columns and "volume" in data.columns:
+            features["obv"] = self.obv(data["close"], data["volume"])
 
-        if all(col in data.columns for col in ['high', 'low', 'close']):
-            features['cci'] = self.cci(data['high'], data['low'], data['close'])
-            features['williams_r'] = self.williams_r(data['high'], data['low'], data['close'])
-
-        if all(col in data.columns for col in ['high', 'low', 'close', 'volume']):
-            features['mfi'] = self.money_flow_index(
-                data['high'], data['low'], data['close'], data['volume']
+        if all(col in data.columns for col in ["high", "low", "close"]):
+            features["cci"] = self.cci(data["high"], data["low"], data["close"])
+            features["williams_r"] = self.williams_r(
+                data["high"], data["low"], data["close"]
             )
-            features['vwap'] = self.vwap(
-                data['high'], data['low'], data['close'], data['volume']
+
+        if all(col in data.columns for col in ["high", "low", "close", "volume"]):
+            features["mfi"] = self.money_flow_index(
+                data["high"], data["low"], data["close"], data["volume"]
+            )
+            features["vwap"] = self.vwap(
+                data["high"], data["low"], data["close"], data["volume"]
             )
 
         return features
@@ -86,7 +87,9 @@ class TechnicalIndicators(BaseFeatureCalculator):
         self, prices: pd.Series, period: int = 20, num_std: float = 2.0
     ) -> Tuple[pd.Series, pd.Series, pd.Series]:
         """Calculate Bollinger Bands - delegates to TechnicalFeatures."""
-        middle, upper, lower = self._common_features.calculate_bollinger_bands(prices, period, num_std)
+        middle, upper, lower = self._common_features.calculate_bollinger_bands(
+            prices, period, num_std
+        )
         # Return in the same order as original (upper, middle, lower)
         return upper, middle, lower
 
@@ -248,9 +251,7 @@ class TechnicalIndicators(BaseFeatureCalculator):
 
         if period:
             cum_vol = volume.rolling(window=period).sum()
-            cum_vol_price = (
-                (typical_price * volume).rolling(window=period).sum()
-            )
+            cum_vol_price = (typical_price * volume).rolling(window=period).sum()
         else:
             cum_vol = volume.cumsum()
             cum_vol_price = (typical_price * volume).cumsum()
@@ -286,23 +287,15 @@ class TechnicalIndicators(BaseFeatureCalculator):
         money_flow = typical_price * volume
 
         # Determine positive and negative money flow
-        positive_flow = np.where(
-            typical_price > typical_price.shift(1), money_flow, 0
-        )
-        negative_flow = np.where(
-            typical_price < typical_price.shift(1), money_flow, 0
-        )
+        positive_flow = np.where(typical_price > typical_price.shift(1), money_flow, 0)
+        negative_flow = np.where(typical_price < typical_price.shift(1), money_flow, 0)
 
         # Calculate money flow ratio
         positive_mf = (
-            pd.Series(positive_flow, index=close.index)
-            .rolling(window=period)
-            .sum()
+            pd.Series(positive_flow, index=close.index).rolling(window=period).sum()
         )
         negative_mf = (
-            pd.Series(negative_flow, index=close.index)
-            .rolling(window=period)
-            .sum()
+            pd.Series(negative_flow, index=close.index).rolling(window=period).sum()
         )
 
         mfi = 100 - (100 / (1 + positive_mf / negative_mf))
@@ -346,12 +339,8 @@ class TechnicalIndicators(BaseFeatureCalculator):
         atr_val = self.atr(high, low, close, period)
 
         # Calculate directional indicators
-        plus_di = (
-            100 * pd.Series(plus_dm).rolling(window=period).mean() / atr_val
-        )
-        minus_di = (
-            100 * pd.Series(minus_dm).rolling(window=period).mean() / atr_val
-        )
+        plus_di = 100 * pd.Series(plus_dm).rolling(window=period).mean() / atr_val
+        minus_di = 100 * pd.Series(minus_dm).rolling(window=period).mean() / atr_val
 
         # Calculate ADX
         dx = 100 * np.abs(plus_di - minus_di) / (plus_di + minus_di)

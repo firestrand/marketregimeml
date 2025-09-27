@@ -31,13 +31,18 @@ def _format_table(df: pd.DataFrame) -> str:
     except Exception:
         # Fallback: simple pipe table
         headers = list(df.columns)
-        lines = ["| " + " | ".join(headers) + " |", "| " + " | ".join(["---"] * len(headers)) + " |"]
+        lines = [
+            "| " + " | ".join(headers) + " |",
+            "| " + " | ".join(["---"] * len(headers)) + " |",
+        ]
         for _, row in df.iterrows():
             lines.append("| " + " | ".join(str(row[h]) for h in headers) + " |")
         return "\n".join(lines)
 
 
-def write_regime_ablation_markdown(all_results: Dict[str, Dict[int, Dict]], out_path: str) -> None:
+def write_regime_ablation_markdown(
+    all_results: Dict[str, Dict[int, Dict]], out_path: str
+) -> None:
     """Create a Markdown summary for regime-count ablation results.
 
     all_results structure: {dataset_name: {n_regimes: {model_name: metrics_dict}}}
@@ -95,7 +100,9 @@ def write_regime_ablation_markdown(all_results: Dict[str, Dict[int, Dict]], out_
     write_text(out_path, "\n".join(parts))
 
 
-def write_ensemble_ablation_markdown(all_results: Dict[str, Dict[str, Dict]], out_path: str) -> None:
+def write_ensemble_ablation_markdown(
+    all_results: Dict[str, Dict[str, Dict]], out_path: str
+) -> None:
     """Create a Markdown summary for ensemble-composition ablation results.
 
     all_results structure: {dataset_name: {config_name: metrics_dict}}
@@ -105,85 +112,105 @@ def write_ensemble_ablation_markdown(all_results: Dict[str, Dict[str, Dict]], ou
     for dataset_name, dataset_results in all_results.items():
         parts.append(_md_h2(dataset_name))
         # Sort by RQI
-        sorted_results = sorted(dataset_results.items(), key=lambda x: x[1].get("rqi", 0.0), reverse=True)
+        sorted_results = sorted(
+            dataset_results.items(), key=lambda x: x[1].get("rqi", 0.0), reverse=True
+        )
         top = sorted_results[:10]
-        df = pd.DataFrame([
-            {
-                "configuration": name,
-                "n_regimes": int(m.get("n_regimes", 0)),
-                "RQI": round(float(m.get("rqi", 0.0)), 2),
-                "type": m.get("type", ""),
-                "silhouette_pre": round(float(m.get("silhouette_pre", 0.0)), 3),
-                "silhouette": round(float(m.get("silhouette", 0.0)), 3),
-                "separation_pre": round(float(m.get("separation_pre", 0.0)), 3),
-                "separation": round(float(m.get("separation", 0.0)), 3),
-                "strategy_ready": bool(m.get("strategy_ready", False)),
-            }
-            for name, m in top
-        ])
+        df = pd.DataFrame(
+            [
+                {
+                    "configuration": name,
+                    "n_regimes": int(m.get("n_regimes", 0)),
+                    "RQI": round(float(m.get("rqi", 0.0)), 2),
+                    "type": m.get("type", ""),
+                    "silhouette_pre": round(float(m.get("silhouette_pre", 0.0)), 3),
+                    "silhouette": round(float(m.get("silhouette", 0.0)), 3),
+                    "separation_pre": round(float(m.get("separation_pre", 0.0)), 3),
+                    "separation": round(float(m.get("separation", 0.0)), 3),
+                    "strategy_ready": bool(m.get("strategy_ready", False)),
+                }
+                for name, m in top
+            ]
+        )
         parts.append("Top configurations:\n")
         parts.append(_format_table(df))
 
         # Best ready configurations (top 5)
         ready = [
             (name, m)
-            for name, m in sorted(dataset_results.items(), key=lambda x: x[1].get("rqi", 0.0), reverse=True)
+            for name, m in sorted(
+                dataset_results.items(),
+                key=lambda x: x[1].get("rqi", 0.0),
+                reverse=True,
+            )
             if m.get("strategy_ready", False)
         ][:5]
         if ready:
             parts.append("\nBest ready configurations (top 5):\n")
-            df_ready = pd.DataFrame([
-                {
-                    "configuration": n,
-                    "n_regimes": int(m.get("n_regimes", 0)),
-                    "RQI": round(float(m.get("rqi", 0.0)), 2),
-                    "silhouette": round(float(m.get("silhouette", 0.0)), 3),
-                    "separation": round(float(m.get("separation", 0.0)), 3),
-                }
-                for n, m in ready
-            ])
+            df_ready = pd.DataFrame(
+                [
+                    {
+                        "configuration": n,
+                        "n_regimes": int(m.get("n_regimes", 0)),
+                        "RQI": round(float(m.get("rqi", 0.0)), 2),
+                        "silhouette": round(float(m.get("silhouette", 0.0)), 3),
+                        "separation": round(float(m.get("separation", 0.0)), 3),
+                    }
+                    for n, m in ready
+                ]
+            )
             parts.append(_format_table(df_ready))
 
         # Triage: configurations with negative silhouette (top 5)
         neg = [
             (name, m)
-            for name, m in sorted(dataset_results.items(), key=lambda x: x[1].get("silhouette", 0.0))
+            for name, m in sorted(
+                dataset_results.items(), key=lambda x: x[1].get("silhouette", 0.0)
+            )
             if m.get("silhouette", 0.0) < 0
         ][:5]
         if neg:
             parts.append("\nTriage: configurations with negative silhouette (top 5):\n")
-            df_neg = pd.DataFrame([
-                {
-                    "configuration": n,
-                    "n_regimes": int(m.get("n_regimes", 0)),
-                    "silhouette": round(float(m.get("silhouette", 0.0)), 3),
-                    "separation": round(float(m.get("separation", 0.0)), 3),
-                    "RQI": round(float(m.get("rqi", 0.0)), 1),
-                }
-                for n, m in neg
-            ])
+            df_neg = pd.DataFrame(
+                [
+                    {
+                        "configuration": n,
+                        "n_regimes": int(m.get("n_regimes", 0)),
+                        "silhouette": round(float(m.get("silhouette", 0.0)), 3),
+                        "separation": round(float(m.get("separation", 0.0)), 3),
+                        "RQI": round(float(m.get("rqi", 0.0)), 1),
+                    }
+                    for n, m in neg
+                ]
+            )
             parts.append(_format_table(df_neg))
 
         # Closest-to-ready (not ready), top 5 by silhouette
         not_ready = [
             (name, m)
-            for name, m in sorted(dataset_results.items(), key=lambda x: x[1].get("silhouette", 0.0), reverse=True)
+            for name, m in sorted(
+                dataset_results.items(),
+                key=lambda x: x[1].get("silhouette", 0.0),
+                reverse=True,
+            )
             if not m.get("strategy_ready", False)
         ][:5]
         if not_ready:
             parts.append("\nClosest-to-ready (not ready; top 5 by silhouette):\n")
-            df_nr = pd.DataFrame([
-                {
-                    "configuration": n,
-                    "n_regimes": int(m.get("n_regimes", 0)),
-                    "silhouette": round(float(m.get("silhouette", 0.0)), 3),
-                    "separation": round(float(m.get("separation", 0.0)), 3),
-                    "persistence": round(float(m.get("persistence", 0.0)), 3),
-                    "min_prop": round(float(m.get("min_cluster_prop", 0.0)), 3),
-                    "RQI": round(float(m.get("rqi", 0.0)), 1),
-                }
-                for n, m in not_ready
-            ])
+            df_nr = pd.DataFrame(
+                [
+                    {
+                        "configuration": n,
+                        "n_regimes": int(m.get("n_regimes", 0)),
+                        "silhouette": round(float(m.get("silhouette", 0.0)), 3),
+                        "separation": round(float(m.get("separation", 0.0)), 3),
+                        "persistence": round(float(m.get("persistence", 0.0)), 3),
+                        "min_prop": round(float(m.get("min_cluster_prop", 0.0)), 3),
+                        "RQI": round(float(m.get("rqi", 0.0)), 1),
+                    }
+                    for n, m in not_ready
+                ]
+            )
             parts.append(_format_table(df_nr))
 
     write_text(out_path, "\n".join(parts))

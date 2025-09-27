@@ -15,7 +15,6 @@ from marketregimeml.models import (
     EnsembleRegimeDetector,
 )
 from marketregimeml.evaluation.metrics import RegimeMetrics
-from marketregimeml.evaluation import metrics_functions as mf
 from marketregimeml.evaluation import strategy as strat
 from marketregimeml.evaluation.strategy import ReadinessThresholds
 from marketregimeml.benchmarks.reporting import write_regime_ablation_markdown
@@ -33,21 +32,28 @@ def test_regime_counts(
     """Test different n_regimes values with stability sweep across seeds."""
     results = {}
     metrics = RegimeMetrics()
-    
+
     for n_regimes in regime_counts:
         print(f"\nTesting n_regimes={n_regimes}")
         model_results = {}
-        
+
         def build_models(seed: int) -> Dict[str, object]:
             models: Dict[str, object] = {
                 "HMM": HMMRegimeDetector(n_regimes=n_regimes, random_state=seed),
                 "GMM": GMMRegimeDetector(n_regimes=n_regimes, random_state=seed),
                 "GARCH": GARCHRegimeDetector(n_regimes=n_regimes, random_state=seed),
                 "RandomForest": RandomForestRegimeClassifier(
-                    n_regimes=n_regimes, n_estimators=300, random_state=seed, class_weight='balanced'
+                    n_regimes=n_regimes,
+                    n_estimators=300,
+                    random_state=seed,
+                    class_weight="balanced",
                 ),
                 "SVM (RBF)": SVMRegimeClassifier(
-                    n_regimes=n_regimes, kernel='rbf', probability=True, random_state=seed, class_weight='balanced'
+                    n_regimes=n_regimes,
+                    kernel="rbf",
+                    probability=True,
+                    random_state=seed,
+                    class_weight="balanced",
                 ),
             }
             # Optional XGBoost
@@ -62,14 +68,20 @@ def test_regime_counts(
             fast_svm = EnsembleRegimeDetector(
                 models=[
                     SVMRegimeClassifier(
-                        n_regimes=n_regimes, kernel='rbf', probability=True, random_state=seed
+                        n_regimes=n_regimes,
+                        kernel="rbf",
+                        probability=True,
+                        random_state=seed,
                     ),
                     SVMRegimeClassifier(
-                        n_regimes=n_regimes, kernel='linear', probability=True, random_state=seed
+                        n_regimes=n_regimes,
+                        kernel="linear",
+                        probability=True,
+                        random_state=seed,
                     ),
                 ],
                 n_regimes=n_regimes,
-                strategy='voting',
+                strategy="voting",
             )
             models["Fast SVM Ensemble"] = fast_svm
             # Top3 ensemble only if XGBoost available
@@ -78,14 +90,17 @@ def test_regime_counts(
                     models=[
                         models["XGBoost"],
                         SVMRegimeClassifier(
-                            n_regimes=n_regimes, kernel='rbf', probability=True, random_state=seed
+                            n_regimes=n_regimes,
+                            kernel="rbf",
+                            probability=True,
+                            random_state=seed,
                         ),
                         RandomForestRegimeClassifier(
                             n_regimes=n_regimes, n_estimators=300, random_state=seed
                         ),
                     ],
                     n_regimes=n_regimes,
-                    strategy='voting',
+                    strategy="voting",
                 )
                 models["Top3 Ensemble"] = top3
             return models
@@ -155,9 +170,7 @@ def test_regime_counts(
                     "normalized_entropy": float(dist["normalized_entropy"]),
                     "avg_confidence": float(conf["avg_confidence"]),
                     "avg_margin": float(conf["avg_margin"]),
-                    "avg_local_consistency": float(
-                        temporal["avg_local_consistency"]
-                    ),
+                    "avg_local_consistency": float(temporal["avg_local_consistency"]),
                     "autocorr_lag1": float(temporal["autocorr_lag1"]),
                     "min_cluster_prop": float(assess["min_cluster_prop"]),
                     "n_regimes_observed": int(stability["n_regimes_observed"]),
@@ -175,9 +188,9 @@ def test_regime_counts(
                     "seed_ari_mean": 0.0,
                     "seed_nmi_mean": 0.0,
                 }
-        
+
         results[n_regimes] = model_results
-    
+
     return results
 
 
@@ -187,7 +200,7 @@ def run_ablation_study():
     print("REGIME COUNT ABLATION STUDY")
     print("Testing optimal n_regimes parameter on real market data")
     print("=" * 80)
-    
+
     # Load data
     loader = RealDataLoader()
     store = DuckDBStore()
@@ -210,7 +223,9 @@ def run_ablation_study():
         try:
             agg = store.read_ohlcv_aggregated("EUR_USD", "M5", tf)
             if not agg.empty:
-                datasets[f"EUR/USD ({tf})"] = build_features_from_ohlcv(agg.iloc[-limit_m5 // div :])
+                datasets[f"EUR/USD ({tf})"] = build_features_from_ohlcv(
+                    agg.iloc[-limit_m5 // div :]
+                )
         except Exception:
             pass
 
@@ -227,29 +242,33 @@ def run_ablation_study():
                 store.write_ohlcv(fetched, "BTC/USD", "M5")
                 btc_m5 = store.read_ohlcv("BTC/USD", "M5")
         if not btc_m5.empty:
-            datasets["BTC/USD (M5)"] = build_features_from_ohlcv(btc_m5.iloc[-limit_m5:])
+            datasets["BTC/USD (M5)"] = build_features_from_ohlcv(
+                btc_m5.iloc[-limit_m5:]
+            )
             for tf, div in [("M15", 3), ("M30", 6), ("H1", 12)]:
                 try:
                     agg = store.read_ohlcv_aggregated("BTC/USD", "M5", tf)
                     if not agg.empty:
-                        datasets[f"BTC/USD ({tf})"] = build_features_from_ohlcv(agg.iloc[-limit_m5 // div :])
+                        datasets[f"BTC/USD ({tf})"] = build_features_from_ohlcv(
+                            agg.iloc[-limit_m5 // div :]
+                        )
                 except Exception:
                     pass
     except Exception:
         pass
-    
+
     all_results = {}
-    
+
     for dataset_name, data in datasets.items():
         if data is None:
             print(f"\nSkipping {dataset_name} - failed to load")
             continue
-            
+
         print(f"\n{'='*60}")
         print(f"Dataset: {dataset_name}")
         print(f"Samples: {len(data)}")
         print(f"{'='*60}")
-        
+
         # Test different regime counts with stability sweep
         results = test_regime_counts(
             data,
@@ -257,16 +276,16 @@ def run_ablation_study():
             seeds=[0, 1, 2],
         )
         all_results[dataset_name] = results
-    
+
     # Print summary
     print("\n" + "=" * 80)
     print("ABLATION STUDY SUMMARY")
     print("=" * 80)
-    
+
     for dataset_name, dataset_results in all_results.items():
         print(f"\n{dataset_name}:")
         print("-" * 40)
-        
+
         # Create comparison table
         df_data = []
         for n_regimes, models in dataset_results.items():
@@ -275,49 +294,58 @@ def run_ablation_study():
                 rqi_val = m.get("rqi_mean", m.get("rqi", 0.0))
                 row[f"{model_name}_RQI"] = rqi_val
             df_data.append(row)
-        
+
         df = pd.DataFrame(df_data)
         print(df.to_string(index=False))
-        
+
         # Find best n_regimes for each model
         print("\nBest n_regimes per model:")
-        for model_name in ["HMM", "XGBoost", "SVM (RBF)", "Fast SVM Ensemble", "Top3 Ensemble"]:
+        for model_name in [
+            "HMM",
+            "XGBoost",
+            "SVM (RBF)",
+            "Fast SVM Ensemble",
+            "Top3 Ensemble",
+        ]:
             col_name = f"{model_name}_RQI"
             if col_name in df.columns:
                 best_idx = df[col_name].idxmax()
                 best_n = df.loc[best_idx, "n_regimes"]
                 best_rqi = df.loc[best_idx, col_name]
                 print(f"  {model_name}: n_regimes={best_n} (RQI={best_rqi:.1f})")
-    
+
     # Overall conclusion
     print("\n" + "=" * 80)
     print("CONCLUSIONS:")
     print("=" * 80)
-    
+
     # Calculate average RQI for each n_regimes across all datasets and models
     regime_totals = {k: [] for k in [2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 21, 25, 29, 33]}
-    
+
     for dataset_results in all_results.values():
         for n_regimes, models in dataset_results.items():
             for m in models.values():
                 rqi_val = m.get("rqi_mean", m.get("rqi", 0.0))
                 if rqi_val > 0:
                     regime_totals[n_regimes].append(rqi_val)
-    
+
     print("\nAverage RQI across all models and datasets:")
     for n_regimes, rqis in regime_totals.items():
         if rqis:
             avg_rqi = np.mean(rqis)
             print(f"  n_regimes={n_regimes}: {avg_rqi:.1f} (n={len(rqis)} tests)")
-    
+
     # Find overall winner
-    best_n = max(regime_totals.keys(), key=lambda k: np.mean(regime_totals[k]) if regime_totals[k] else 0)
+    best_n = max(
+        regime_totals.keys(),
+        key=lambda k: np.mean(regime_totals[k]) if regime_totals[k] else 0,
+    )
     print(f"\n✅ OPTIMAL: n_regimes={best_n} provides best overall performance")
-    
+
     # Save results
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     results_file = f"regime_ablation_results_{timestamp}.txt"
-    
+
     with open(results_file, "w") as f:
         f.write("REGIME COUNT ABLATION STUDY RESULTS\n")
         f.write("=" * 80 + "\n\n")
@@ -354,7 +382,7 @@ def run_ablation_study():
                         )
                     )
             f.write("\n")
-    
+
     print(f"\nResults saved to {results_file}")
 
     # Save Markdown report alongside text results (for human scanning)

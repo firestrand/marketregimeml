@@ -48,9 +48,7 @@ def _load_btc_timeframe(timeframe: str, bars: int) -> pd.DataFrame | None:
             agg_tf = timeframe
             base = store.read_ohlcv("BTC/USD", base_tf)
             if not base.empty:
-                agg = (
-                    store.read_ohlcv_aggregated("BTC/USD", base_tf, agg_tf)
-                )
+                agg = store.read_ohlcv_aggregated("BTC/USD", base_tf, agg_tf)
                 if not agg.empty:
                     return _prepare_features(agg.iloc[-bars:])
         except Exception:
@@ -93,7 +91,9 @@ def run_btc_multi_tf_ablation(
     all_results: Dict[str, Dict] = {}
     for name, feats in datasets.items():
         print(f"\n=== Dataset: {name} | samples={len(feats)} ===")
-        results = test_ensemble_combinations(feats, n_regimes=n_regimes, include_unsupervised=True, seeds=[0, 1])
+        results = test_ensemble_combinations(
+            feats, n_regimes=n_regimes, include_unsupervised=True, seeds=[0, 1]
+        )
         all_results[name] = results
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")

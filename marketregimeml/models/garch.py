@@ -174,9 +174,7 @@ class GARCHModel:
             "aic": result.aic,
             "bic": result.bic,
             "log_likelihood": result.loglikelihood,
-            "ljung_box_pvalue": lb_test["lb_pvalue"].iloc[
-                -1
-            ],  # p-value for lag 10
+            "ljung_box_pvalue": lb_test["lb_pvalue"].iloc[-1],  # p-value for lag 10
         }
 
 
@@ -221,9 +219,7 @@ class GARCHRegimeDetector(BaseRegimeDetector):
         **kwargs,
     ):
         """Initialize GARCH regime detector."""
-        super().__init__(
-            n_regimes=n_regimes, random_state=random_state, **kwargs
-        )
+        super().__init__(n_regimes=n_regimes, random_state=random_state, **kwargs)
 
         self.p = p
         self.q = q
@@ -276,9 +272,7 @@ class GARCHRegimeDetector(BaseRegimeDetector):
 
         elif self.threshold_method == "kmeans":
             # Use K-means clustering
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             volatility_reshaped = volatility.reshape(-1, 1)
             kmeans.fit(volatility_reshaped)
 
@@ -293,14 +287,10 @@ class GARCHRegimeDetector(BaseRegimeDetector):
             self.volatility_thresholds_ = breaks[1:-1]  # Exclude min and max
 
         else:
-            raise ValueError(
-                f"Unknown threshold method: {self.threshold_method}"
-            )
+            raise ValueError(f"Unknown threshold method: {self.threshold_method}")
 
         self.is_fitted = True
-        logger.info(
-            f"GARCH regime detector fitted with {self.n_regimes} regimes"
-        )
+        logger.info(f"GARCH regime detector fitted with {self.n_regimes} regimes")
 
         return self
 
@@ -322,18 +312,14 @@ class GARCHRegimeDetector(BaseRegimeDetector):
 
         # Get returns
         if self.volatility_column not in features.columns:
-            raise KeyError(
-                f"Volatility column '{self.volatility_column}' not found"
-            )
+            raise KeyError(f"Volatility column '{self.volatility_column}' not found")
 
         returns = features[self.volatility_column]
 
         # Refit GARCH model if needed (for new data)
         if len(returns) != len(self.garch_model_.conditional_volatility_):
             # This is new data, need to get volatility estimates
-            temp_model = GARCHModel(
-                p=self.p, q=self.q, distribution=self.distribution
-            )
+            temp_model = GARCHModel(p=self.p, q=self.q, distribution=self.distribution)
             temp_model.fit(returns)
             volatility = temp_model.conditional_volatility_
         else:
@@ -369,9 +355,7 @@ class GARCHRegimeDetector(BaseRegimeDetector):
         returns = features[self.volatility_column]
 
         if len(returns) != len(self.garch_model_.conditional_volatility_):
-            temp_model = GARCHModel(
-                p=self.p, q=self.q, distribution=self.distribution
-            )
+            temp_model = GARCHModel(p=self.p, q=self.q, distribution=self.distribution)
             temp_model.fit(returns)
             volatility = temp_model.conditional_volatility_
         else:
@@ -479,12 +463,8 @@ class GARCHRegimeDetector(BaseRegimeDetector):
                     "volatility_range": (regime_vol.min(), regime_vol.max()),
                     "mean_return": regime_returns.mean(),
                     "frequency": mask.mean(),
-                    "avg_duration": (
-                        durations.mean() if len(durations) > 0 else 0
-                    ),
-                    "max_duration": (
-                        durations.max() if len(durations) > 0 else 0
-                    ),
+                    "avg_duration": (durations.mean() if len(durations) > 0 else 0),
+                    "max_duration": (durations.max() if len(durations) > 0 else 0),
                 }
             else:
                 characteristics[regime] = {
@@ -618,9 +598,7 @@ class MSGARCHRegimeDetector(BaseRegimeDetector):
         **kwargs,
     ):
         """Initialize MS-GARCH detector."""
-        super().__init__(
-            n_regimes=n_regimes, random_state=random_state, **kwargs
-        )
+        super().__init__(n_regimes=n_regimes, random_state=random_state, **kwargs)
 
         self.p = p
         self.q = q
@@ -691,9 +669,7 @@ class MSGARCHRegimeDetector(BaseRegimeDetector):
 
         # Check for convergence issues
         if max_iter < 10:
-            warnings.warn(
-                "Low max_iter may lead to convergence issues", UserWarning
-            )
+            warnings.warn("Low max_iter may lead to convergence issues", UserWarning)
 
         self.is_fitted = True
         logger.info(f"MS-GARCH fitted with {self.n_regimes} regimes")
@@ -723,14 +699,11 @@ class MSGARCHRegimeDetector(BaseRegimeDetector):
         # In practice, would use proper likelihood calculation
 
         # Calculate volatility for regime assignment
-        rolling_vol = (
-            pd.Series(returns).rolling(20, min_periods=1).std().values
-        )
+        rolling_vol = pd.Series(returns).rolling(20, min_periods=1).std().values
 
         # Assign regimes based on volatility levels
         regime_vols = [
-            self._regime_params[i]["omega"] ** 0.5
-            for i in range(self.n_regimes)
+            self._regime_params[i]["omega"] ** 0.5 for i in range(self.n_regimes)
         ]
         regime_vols = sorted(regime_vols)
 
@@ -823,9 +796,7 @@ class MSGARCHRegimeDetector(BaseRegimeDetector):
             for regime in range(self.n_regimes):
                 params = self._regime_params[regime]
                 returns_forecast[h] += params["mean"] * steady_state[regime]
-                volatility_forecast[h] += (
-                    params["omega"] ** 0.5 * steady_state[regime]
-                )
+                volatility_forecast[h] += params["omega"] ** 0.5 * steady_state[regime]
 
             regime_probs[h] = steady_state
 
@@ -897,9 +868,11 @@ class MSGARCHRegimeDetector(BaseRegimeDetector):
         if not self.is_fitted:
             raise ValueError("Model not fitted")
 
-        if not hasattr(self, '_fitted_features'):
+        if not hasattr(self, "_fitted_features"):
             # Fallback for models fitted before this change
-            raise ValueError("Model needs to be refitted to compute smoothed probabilities")
+            raise ValueError(
+                "Model needs to be refitted to compute smoothed probabilities"
+            )
 
         # Get the filtered probabilities
         filtered_probs = self.predict_proba(self._fitted_features)
@@ -915,7 +888,7 @@ class MSGARCHRegimeDetector(BaseRegimeDetector):
         for t in range(1, n):
             for j in range(self.n_regimes):
                 forward[t, j] = filtered_probs[t, j] * np.sum(
-                    forward[t-1] * self.transition_matrix_[:, j]
+                    forward[t - 1] * self.transition_matrix_[:, j]
                 )
             # Normalize
             forward[t] /= np.sum(forward[t])
@@ -924,10 +897,12 @@ class MSGARCHRegimeDetector(BaseRegimeDetector):
         backward = np.zeros((n, self.n_regimes))
         backward[-1] = 1.0
 
-        for t in range(n-2, -1, -1):
+        for t in range(n - 2, -1, -1):
             for i in range(self.n_regimes):
                 backward[t, i] = np.sum(
-                    self.transition_matrix_[i, :] * filtered_probs[t+1] * backward[t+1]
+                    self.transition_matrix_[i, :]
+                    * filtered_probs[t + 1]
+                    * backward[t + 1]
                 )
             # Normalize
             if np.sum(backward[t]) > 0:

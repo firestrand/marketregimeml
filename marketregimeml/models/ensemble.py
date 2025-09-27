@@ -111,27 +111,19 @@ class VotingEnsemble(BaseRegimeDetector):
         models = [
             (
                 "hmm_full",
-                HMMRegimeDetector(
-                    n_regimes=self.n_regimes, covariance_type="full"
-                ),
+                HMMRegimeDetector(n_regimes=self.n_regimes, covariance_type="full"),
             ),
             (
                 "hmm_diag",
-                HMMRegimeDetector(
-                    n_regimes=self.n_regimes, covariance_type="diag"
-                ),
+                HMMRegimeDetector(n_regimes=self.n_regimes, covariance_type="diag"),
             ),
             (
                 "gmm_full",
-                GMMRegimeDetector(
-                    n_regimes=self.n_regimes, covariance_type="full"
-                ),
+                GMMRegimeDetector(n_regimes=self.n_regimes, covariance_type="full"),
             ),
             (
                 "gmm_diag",
-                GMMRegimeDetector(
-                    n_regimes=self.n_regimes, covariance_type="diag"
-                ),
+                GMMRegimeDetector(n_regimes=self.n_regimes, covariance_type="diag"),
             ),
         ]
         return models
@@ -205,10 +197,7 @@ class VotingEnsemble(BaseRegimeDetector):
             estimators = []
             for name, model in self.models:
                 # Check if it's a Mock object (for testing)
-                if (
-                    hasattr(model, "__class__")
-                    and "Mock" in model.__class__.__name__
-                ):
+                if hasattr(model, "__class__") and "Mock" in model.__class__.__name__:
                     # For mocks, fit them directly
                     model.fit(X, y)
                 else:
@@ -216,9 +205,7 @@ class VotingEnsemble(BaseRegimeDetector):
                     wrapped = wrap_model_for_sklearn(model, self.n_regimes)
                     estimators.append((name, wrapped))
 
-            if (
-                estimators
-            ):  # Only create VotingClassifier if we have real models
+            if estimators:  # Only create VotingClassifier if we have real models
                 self.ensemble_ = VotingClassifier(
                     estimators=estimators,
                     voting=self.voting,
@@ -261,7 +248,11 @@ class VotingEnsemble(BaseRegimeDetector):
             from sklearn.metrics import adjusted_rand_score
 
             preds = []
-            if hasattr(self, "ensemble_") and self.ensemble_ is not None and hasattr(self.ensemble_, "estimators_"):
+            if (
+                hasattr(self, "ensemble_")
+                and self.ensemble_ is not None
+                and hasattr(self.ensemble_, "estimators_")
+            ):
                 for est in self.ensemble_.estimators_:
                     if hasattr(est, "predict"):
                         preds.append(est.predict(X))
@@ -298,9 +289,7 @@ class VotingEnsemble(BaseRegimeDetector):
         """Generate pseudo labels for training."""
         from sklearn.cluster import KMeans
 
-        kmeans = KMeans(
-            n_clusters=self.n_regimes, random_state=self.random_state
-        )
+        kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
         return kmeans.fit_predict(X)
 
     def _predict_voting(self, X: np.ndarray) -> np.ndarray:
@@ -480,9 +469,7 @@ class VotingEnsemble(BaseRegimeDetector):
             proba = self.predict_proba(X)
             predictions = self.predict(X)
             # Return sum of log probabilities for predicted classes
-            return np.sum(
-                np.log(proba[np.arange(len(X)), predictions] + 1e-10)
-            )
+            return np.sum(np.log(proba[np.arange(len(X)), predictions] + 1e-10))
 
     def _count_parameters(self) -> int:
         """Count total parameters in the ensemble.
@@ -586,9 +573,7 @@ class VotingEnsemble(BaseRegimeDetector):
         from sklearn.metrics import adjusted_rand_score
 
         cv_scores = {}
-        kf = KFold(
-            n_splits=n_splits, shuffle=True, random_state=self.random_state
-        )
+        kf = KFold(n_splits=n_splits, shuffle=True, random_state=self.random_state)
 
         for name, model in self.models:
             scores = []
@@ -661,15 +646,11 @@ class VotingEnsemble(BaseRegimeDetector):
 
             # Weighted average
             if len(predictions[0].shape) > 1:
-                weighted_proba = np.average(
-                    predictions, axis=0, weights=weights
-                )
+                weighted_proba = np.average(predictions, axis=0, weights=weights)
                 weighted_preds = np.argmax(weighted_proba, axis=1)
             else:
                 weighted_preds = (
-                    np.average(predictions, axis=0, weights=weights)
-                    .round()
-                    .astype(int)
+                    np.average(predictions, axis=0, weights=weights).round().astype(int)
                 )
 
             # Calculate diversity as objective (we want high diversity)
@@ -697,9 +678,7 @@ class VotingEnsemble(BaseRegimeDetector):
             y: Target labels
         """
         if self.strategy == "stacking":
-            self.meta_model = LogisticRegression(
-                random_state=self.random_state
-            )
+            self.meta_model = LogisticRegression(random_state=self.random_state)
 
             # Get predictions from base models
             base_predictions = []
@@ -783,9 +762,7 @@ class StackingEnsemble(BaseRegimeDetector):
             ]
 
         if self.meta_learner is None:
-            self.meta_learner = LogisticRegression(
-                random_state=self.random_state
-            )
+            self.meta_learner = LogisticRegression(random_state=self.random_state)
 
         # Create sklearn-compatible estimators
         estimators = []
@@ -797,18 +774,14 @@ class StackingEnsemble(BaseRegimeDetector):
             estimators=estimators,
             final_estimator=self.meta_learner,
             cv=self.cv_folds,
-            stack_method=(
-                "predict_proba" if self.use_probabilities else "predict"
-            ),
+            stack_method=("predict_proba" if self.use_probabilities else "predict"),
         )
 
         # Generate labels if not provided
         if y is None:
             from sklearn.cluster import KMeans
 
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(X)
 
         self.ensemble_.fit(X, y)
@@ -927,9 +900,7 @@ class BaggingEnsemble(BaseRegimeDetector):
             )
 
         # Get the sklearn estimator
-        base_estimator = wrap_model_for_sklearn(
-            self.base_model, self.n_regimes
-        )
+        base_estimator = wrap_model_for_sklearn(self.base_model, self.n_regimes)
 
         self.ensemble_ = BaggingClassifier(
             estimator=base_estimator,
@@ -945,9 +916,7 @@ class BaggingEnsemble(BaseRegimeDetector):
         if y is None:
             from sklearn.cluster import KMeans
 
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(X)
 
         self.ensemble_.fit(X, y)
@@ -1063,9 +1032,7 @@ class BoostingEnsemble(BaseRegimeDetector):
         if y is None:
             from sklearn.cluster import KMeans
 
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(X)
 
         if self.algorithm == "adaboost":
@@ -1211,18 +1178,14 @@ class WeightedEnsemble(BaseRegimeDetector):
                 MLRegimeClassifier(
                     classifier_type="logistic", n_regimes=self.n_regimes
                 ),
-                MLRegimeClassifier(
-                    classifier_type="svm", n_regimes=self.n_regimes
-                ),
+                MLRegimeClassifier(classifier_type="svm", n_regimes=self.n_regimes),
             ]
 
         # Generate labels if not provided
         if y is None:
             from sklearn.cluster import KMeans
 
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(X)
 
         # Fit all models
@@ -1237,9 +1200,7 @@ class WeightedEnsemble(BaseRegimeDetector):
             scores = []
             for model in self.fitted_models_:
                 if hasattr(model, "classifier"):
-                    score = cross_val_score(
-                        model.classifier, X, y, cv=3
-                    ).mean()
+                    score = cross_val_score(model.classifier, X, y, cv=3).mean()
                 else:
                     # Simple accuracy for non-sklearn models
                     predictions = model.predict(X)
@@ -1417,9 +1378,7 @@ class HierarchicalEnsemble(BaseRegimeDetector):
         if y is None:
             from sklearn.cluster import KMeans
 
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(X)
 
         self.fitted_levels_ = []
@@ -1484,9 +1443,7 @@ class HierarchicalEnsemble(BaseRegimeDetector):
 
             # Prepare input for next level if not the last
             if level_idx < len(self.fitted_levels_) - 1:
-                level_pred_features = [
-                    p.reshape(-1, 1) for p in level_predictions
-                ]
+                level_pred_features = [p.reshape(-1, 1) for p in level_predictions]
                 current_X = np.hstack([X] + level_pred_features)
 
         return final_preds
@@ -1517,9 +1474,7 @@ class HierarchicalEnsemble(BaseRegimeDetector):
 
             # Prepare input for next level
             if level_idx < len(self.fitted_levels_) - 1:
-                level_pred_features = [
-                    p.reshape(-1, 1) for p in level_predictions
-                ]
+                level_pred_features = [p.reshape(-1, 1) for p in level_predictions]
                 current_X = np.hstack([X] + level_pred_features)
 
         return level_outputs
@@ -1567,6 +1522,7 @@ class HierarchicalEnsemble(BaseRegimeDetector):
         """
         total_models = sum(len(level) for level in self.levels)
         return total_models * 100
+
 
 # Main ensemble class alias for backward compatibility
 EnsembleRegimeDetector = VotingEnsemble

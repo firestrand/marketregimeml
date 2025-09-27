@@ -35,9 +35,7 @@ class FeatureValidator:
         try:
             # Check if data is DataFrame
             if not isinstance(data, pd.DataFrame):
-                raise ValueError(
-                    f"Data must be pandas DataFrame, got {type(data)}"
-                )
+                raise ValueError(f"Data must be pandas DataFrame, got {type(data)}")
 
             # Check if DataFrame is empty
             if data.empty:
@@ -101,10 +99,7 @@ class FeatureValidator:
         # Validate OHLC relationships if we have the data
         if len(available_ohlc) >= 3:
             try:
-                if all(
-                    col in data.columns
-                    for col in ["open", "high", "low", "close"]
-                ):
+                if all(col in data.columns for col in ["open", "high", "low", "close"]):
                     # Check OHLC constraints: High >= Low, High >= Open/Close, Low <= Open/Close
                     invalid_hl = (data["high"] < data["low"]).sum()
                     invalid_ho = (data["high"] < data["open"]).sum()
@@ -113,26 +108,18 @@ class FeatureValidator:
                     invalid_lc = (data["low"] > data["close"]).sum()
 
                     total_violations = (
-                        invalid_hl
-                        + invalid_ho
-                        + invalid_hc
-                        + invalid_lo
-                        + invalid_lc
+                        invalid_hl + invalid_ho + invalid_hc + invalid_lo + invalid_lc
                     )
                     if total_violations > 0:
                         validation_result["data_issues"].append(
                             f"OHLC constraint violations: {total_violations} rows"
                         )
             except Exception as e:
-                validation_result["data_issues"].append(
-                    f"OHLC validation error: {e}"
-                )
+                validation_result["data_issues"].append(f"OHLC validation error: {e}")
 
         return validation_result
 
-    def validate_computed_features(
-        self, features: pd.DataFrame
-    ) -> Dict[str, Any]:
+    def validate_computed_features(self, features: pd.DataFrame) -> Dict[str, Any]:
         """Validate computed features for quality and consistency.
 
         Args:
@@ -146,9 +133,7 @@ class FeatureValidator:
         try:
             if features.empty:
                 validation_result["is_valid"] = False
-                validation_result["issues"].append(
-                    "Features DataFrame is empty"
-                )
+                validation_result["issues"].append("Features DataFrame is empty")
                 return validation_result
 
             # Run all validation checks
@@ -167,9 +152,7 @@ class FeatureValidator:
 
         return validation_result
 
-    def validate_feature_types(
-        self, requested_types: List[str]
-    ) -> Dict[str, Any]:
+    def validate_feature_types(self, requested_types: List[str]) -> Dict[str, Any]:
         """Validate requested feature types.
 
         Args:
@@ -217,9 +200,7 @@ class FeatureValidator:
         }
 
         for param_name, param_value in params.items():
-            self._validate_single_parameter(
-                param_name, param_value, validation_result
-            )
+            self._validate_single_parameter(param_name, param_value, validation_result)
 
         return validation_result
 
@@ -276,9 +257,7 @@ class FeatureValidator:
         """Pass through unknown parameters."""
         return True, None
 
-    def _initialize_validation_result(
-        self, features: pd.DataFrame
-    ) -> Dict[str, Any]:
+    def _initialize_validation_result(self, features: pd.DataFrame) -> Dict[str, Any]:
         """Initialize validation result dictionary."""
         return {
             "is_valid": True,
@@ -302,9 +281,7 @@ class FeatureValidator:
         nan_percentages = features.isna().sum() / len(features) * 100
         high_nan_cols = nan_percentages[nan_percentages > 50].index.tolist()
         if high_nan_cols:
-            result["issues"].append(
-                f"High NaN columns (>50%): {len(high_nan_cols)}"
-            )
+            result["issues"].append(f"High NaN columns (>50%): {len(high_nan_cols)}")
             result["quality_metrics"]["high_nan_columns"] = high_nan_cols
 
     def _check_infinite_values(
@@ -317,9 +294,7 @@ class FeatureValidator:
                 inf_columns.append(col)
 
         if inf_columns:
-            result["issues"].append(
-                f"Columns with infinite values: {len(inf_columns)}"
-            )
+            result["issues"].append(f"Columns with infinite values: {len(inf_columns)}")
             result["quality_metrics"]["infinite_columns"] = inf_columns
 
     def _check_constant_columns(
@@ -332,9 +307,7 @@ class FeatureValidator:
                 constant_columns.append(col)
 
         if constant_columns:
-            result["issues"].append(
-                f"Constant columns: {len(constant_columns)}"
-            )
+            result["issues"].append(f"Constant columns: {len(constant_columns)}")
             result["quality_metrics"]["constant_columns"] = constant_columns
 
     def _calculate_quality_score(

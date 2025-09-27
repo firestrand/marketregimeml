@@ -20,9 +20,7 @@ class TestEntropyFeatures:
 
         # Create time series with some patterns
         t = np.linspace(0, 10, n_samples)
-        signal = (
-            np.sin(t) + 0.5 * np.sin(3 * t) + 0.2 * np.random.randn(n_samples)
-        )
+        signal = np.sin(t) + 0.5 * np.sin(3 * t) + 0.2 * np.random.randn(n_samples)
 
         dates = pd.date_range("2020-01-01", periods=n_samples, freq="D")
         return pd.Series(signal, index=dates)
@@ -34,12 +32,8 @@ class TestEntropyFeatures:
         n_samples = 200
 
         # Mix of normal and regime-switching behavior
-        returns1 = np.random.normal(
-            0.001, 0.02, n_samples // 2
-        )  # Low vol regime
-        returns2 = np.random.normal(
-            -0.002, 0.05, n_samples // 2
-        )  # High vol regime
+        returns1 = np.random.normal(0.001, 0.02, n_samples // 2)  # Low vol regime
+        returns2 = np.random.normal(-0.002, 0.05, n_samples // 2)  # High vol regime
         returns = np.concatenate([returns1, returns2])
 
         dates = pd.date_range("2020-01-01", periods=n_samples, freq="D")
@@ -72,9 +66,7 @@ class TestEntropyFeatures:
         # Entropy should be positive
         assert (result.dropna() >= 0).all()
 
-    def test_approximate_entropy_parameters(
-        self, calculator, sample_time_series
-    ):
+    def test_approximate_entropy_parameters(self, calculator, sample_time_series):
         """Test approximate entropy with different parameters."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -153,13 +145,13 @@ class TestEntropyFeatures:
         """Test rolling entropy calculation."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            result = calculator.rolling_entropy(
-                sample_returns, window=30, bins=10
-            )
+            result = calculator.rolling_entropy(sample_returns, window=30, bins=10)
 
         assert isinstance(result, pd.Series)
         assert len(result) == len(sample_returns)
-        assert result.name.startswith("shannon_entropy")  # rolling_entropy calls shannon_entropy
+        assert result.name.startswith(
+            "shannon_entropy"
+        )  # rolling_entropy calls shannon_entropy
 
         # Entropy should be non-negative
         assert (result.dropna() >= 0).all()
@@ -270,9 +262,7 @@ class TestEntropyFeatures:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            result = calculator.approximate_entropy(
-                short_series, window=10, m=2, r=0.2
-            )
+            result = calculator.approximate_entropy(short_series, window=10, m=2, r=0.2)
 
         # Should return series of NaN
         assert result.isna().all()
@@ -324,9 +314,7 @@ class TestEntropyFeatures:
             )
             assert isinstance(result2, pd.Series)
 
-    def test_permutation_entropy_edge_cases(
-        self, calculator, sample_time_series
-    ):
+    def test_permutation_entropy_edge_cases(self, calculator, sample_time_series):
         """Test permutation entropy edge cases."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -413,9 +401,7 @@ class TestEntropyFeatures:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            result = calculator.approximate_entropy(
-                large_series, window=50, m=2, r=0.2
-            )
+            result = calculator.approximate_entropy(large_series, window=50, m=2, r=0.2)
 
         assert isinstance(result, pd.Series)
         assert len(result) == 1000

@@ -46,11 +46,7 @@ class TestWalkForwardStrategy:
 
     def test_initialization(self):
         """Test strategy initialization."""
-        strategy = WalkForwardStrategy(
-            train_periods=100,
-            test_periods=20,
-            step=10
-        )
+        strategy = WalkForwardStrategy(train_periods=100, test_periods=20, step=10)
         assert strategy.train_periods == 100
         assert strategy.test_periods == 20
         assert strategy.step == 10
@@ -61,10 +57,7 @@ class TestPurgedCVStrategy:
 
     def test_initialization(self):
         """Test strategy initialization."""
-        strategy = PurgedCVStrategy(
-            n_splits=5,
-            purge_gap=10
-        )
+        strategy = PurgedCVStrategy(n_splits=5, purge_gap=10)
         assert strategy.n_splits == 5
         assert strategy.purge_gap == 10
 
@@ -74,10 +67,7 @@ class TestRegimeAwareStrategy:
 
     def test_initialization(self):
         """Test strategy initialization."""
-        strategy = RegimeAwareStrategy(
-            n_splits=5,
-            min_regime_samples=10
-        )
+        strategy = RegimeAwareStrategy(n_splits=5, min_regime_samples=10)
         assert strategy.n_splits == 5
         assert strategy.min_regime_samples == 10
 

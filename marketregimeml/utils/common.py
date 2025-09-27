@@ -4,10 +4,9 @@ Consolidates frequently used patterns to reduce duplication.
 Following DRY (Don't Repeat Yourself) principle.
 """
 
-from typing import Union, Optional, Any, Dict, List
+from typing import Union, Optional, List
 import numpy as np
 import pandas as pd
-from functools import wraps
 import warnings
 
 
@@ -232,9 +231,7 @@ class RollingWindow:
             min_periods = window
 
         return data.rolling(
-            window=window,
-            min_periods=min_periods,
-            center=center
+            window=window, min_periods=min_periods, center=center
         ).apply(func, raw=True)
 
     @staticmethod
@@ -294,8 +291,16 @@ class DataValidator:
             If missing values are found
         """
         if isinstance(data, (pd.DataFrame, pd.Series)):
-            if data.isna().any().any() if isinstance(data, pd.DataFrame) else data.isna().any():
-                n_missing = data.isna().sum().sum() if isinstance(data, pd.DataFrame) else data.isna().sum()
+            if (
+                data.isna().any().any()
+                if isinstance(data, pd.DataFrame)
+                else data.isna().any()
+            ):
+                n_missing = (
+                    data.isna().sum().sum()
+                    if isinstance(data, pd.DataFrame)
+                    else data.isna().sum()
+                )
                 raise ValueError(f"{name} contains {n_missing} missing values")
         else:
             if np.isnan(data).any():
@@ -353,8 +358,7 @@ class DataValidator:
             constant_cols = data.columns[data.std() == 0].tolist()
             if constant_cols:
                 warnings.warn(
-                    f"{name} contains constant columns: {constant_cols}",
-                    UserWarning
+                    f"{name} contains constant columns: {constant_cols}", UserWarning
                 )
         elif isinstance(data, pd.Series):
             if data.std() == 0:
@@ -382,7 +386,7 @@ def safe_divide(
     float or np.ndarray
         Result of division
     """
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         result = np.divide(numerator, denominator)
         if isinstance(result, np.ndarray):
             result[~np.isfinite(result)] = fill_value

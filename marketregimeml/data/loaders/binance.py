@@ -74,7 +74,6 @@ class BinanceDataLoader(MarketDataLoader):
         No API key required for public market data.
         """
         # Binance public API doesn't require authentication
-        pass
 
     def _normalize_symbol(self, symbol: str) -> str:
         """
@@ -89,9 +88,7 @@ class BinanceDataLoader(MarketDataLoader):
             Normalized symbol for Binance API
         """
         # Remove common separators and convert to uppercase
-        normalized = (
-            symbol.upper().replace("_", "").replace("/", "").replace("-", "")
-        )
+        normalized = symbol.upper().replace("_", "").replace("/", "").replace("-", "")
 
         # Handle common variations
         if "USD" in normalized and not normalized.endswith("USDT"):
@@ -349,9 +346,7 @@ class BinanceDataLoader(MarketDataLoader):
             response.raise_for_status()
 
             server_time_ms = response.json()["serverTime"]
-            return datetime.fromtimestamp(
-                server_time_ms / 1000, tz=timezone.utc
-            )
+            return datetime.fromtimestamp(server_time_ms / 1000, tz=timezone.utc)
 
         except Exception as e:
             logger.error(f"Failed to get server time: {e}")

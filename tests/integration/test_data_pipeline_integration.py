@@ -77,16 +77,10 @@ class TestDataPipelineIntegration:
         # Statistical features
         features = pd.DataFrame(index=data.index)
         features["returns"] = returns
-        features["rolling_mean"] = stat_features.rolling_mean(
-            returns, window=20
-        )
+        features["rolling_mean"] = stat_features.rolling_mean(returns, window=20)
         features["rolling_std"] = stat_features.rolling_std(returns, window=20)
-        features["skewness"] = stat_features.rolling_skewness(
-            returns, window=20
-        )
-        features["kurtosis"] = stat_features.rolling_kurtosis(
-            returns, window=20
-        )
+        features["skewness"] = stat_features.rolling_skewness(returns, window=20)
+        features["kurtosis"] = stat_features.rolling_kurtosis(returns, window=20)
 
         # Volatility features
         features["realized_vol"] = returns.rolling(20).std()
@@ -274,18 +268,10 @@ class TestDataPipelineIntegration:
 
         # Add various features
         for window in [5, 10, 20, 50]:
-            features[f"returns_{window}"] = (
-                returns.rolling(window).mean().fillna(0)
-            )
-            features[f"vol_{window}"] = (
-                returns.rolling(window).std().fillna(0.01)
-            )
-            features[f"skew_{window}"] = (
-                returns.rolling(window).skew().fillna(0)
-            )
-            features[f"kurt_{window}"] = (
-                returns.rolling(window).kurt().fillna(3)
-            )
+            features[f"returns_{window}"] = returns.rolling(window).mean().fillna(0)
+            features[f"vol_{window}"] = returns.rolling(window).std().fillna(0.01)
+            features[f"skew_{window}"] = returns.rolling(window).skew().fillna(0)
+            features[f"kurt_{window}"] = returns.rolling(window).kurt().fillna(3)
 
         # Add volume features
         features["volume_ratio"] = (
@@ -414,9 +400,7 @@ class TestDataPipelineIntegration:
             current_features = pd.DataFrame(
                 {
                     "returns": current_returns,
-                    "volatility": current_returns.rolling(20)
-                    .std()
-                    .fillna(0.01),
+                    "volatility": current_returns.rolling(20).std().fillna(0.01),
                 }
             )
 

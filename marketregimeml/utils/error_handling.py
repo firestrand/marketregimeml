@@ -13,37 +13,25 @@ T = TypeVar("T")
 class MarketRegimeMLError(Exception):
     """Base exception for all MarketRegimeML errors."""
 
-    pass
-
 
 class DataValidationError(MarketRegimeMLError):
     """Raised when data validation fails."""
-
-    pass
 
 
 class ModelNotFittedError(MarketRegimeMLError):
     """Raised when trying to use an unfitted model."""
 
-    pass
-
 
 class FeatureComputationError(MarketRegimeMLError):
     """Raised when feature computation fails."""
-
-    pass
 
 
 class ModelFittingError(MarketRegimeMLError):
     """Raised when model fitting fails."""
 
-    pass
-
 
 class ConfigurationError(MarketRegimeMLError):
     """Raised when configuration is invalid."""
-
-    pass
 
 
 def safe_execute(
@@ -153,9 +141,7 @@ class ErrorHandler:
         """
         # Track error counts
         error_type = type(error).__name__
-        self.error_counts[error_type] = (
-            self.error_counts.get(error_type, 0) + 1
-        )
+        self.error_counts[error_type] = self.error_counts.get(error_type, 0) + 1
 
         # Log error with context
         self.logger.warning(f"{context}: {error_type}: {str(error)}")

@@ -15,19 +15,19 @@ from marketregimeml.utils.logging import get_logger
 try:  # pragma: no cover - optional dependency
     from numba import jit
 except Exception:  # Fallback: define no-op decorator
+
     def jit(*args, **kwargs):  # type: ignore
         def wrapper(func):
             return func
 
         return wrapper
 
+
 logger = get_logger(__name__)
 
 
 @jit(nopython=True, cache=True)
-def _yang_zhang_core(
-    open_prices, high_prices, low_prices, close_prices, window
-):
+def _yang_zhang_core(open_prices, high_prices, low_prices, close_prices, window):
     """Numba-optimized Yang-Zhang volatility calculation.
 
     Yang-Zhang volatility is considered one of the most accurate volatility estimators
@@ -67,9 +67,9 @@ def _yang_zhang_core(
         rs_var = rs_sum / window
 
         # Combine components
-        result[i] = np.sqrt(
-            overnight_var + k * oc_var + (1 - k) * rs_var
-        ) * np.sqrt(252)
+        result[i] = np.sqrt(overnight_var + k * oc_var + (1 - k) * rs_var) * np.sqrt(
+            252
+        )
 
     return result
 
@@ -89,9 +89,7 @@ def _garman_klass_core(high_prices, low_prices, close_prices, window):
         sum_val = 0.0
         for j in range(i - window + 1, i + 1):
             hl_ratio = np.log(high_prices[j] / low_prices[j])
-            cc_ratio = (
-                np.log(close_prices[j] / close_prices[j - 1]) if j > 0 else 0
-            )
+            cc_ratio = np.log(close_prices[j] / close_prices[j - 1]) if j > 0 else 0
             sum_val += 0.5 * hl_ratio**2 - (2 * np.log(2) - 1) * cc_ratio**2
 
         result[i] = np.sqrt(sum_val / window) * np.sqrt(252)
@@ -124,9 +122,7 @@ def _parkinson_core(high_prices, low_prices, window):
 
 
 @jit(nopython=True, cache=True)
-def _rogers_satchell_core(
-    open_prices, high_prices, low_prices, close_prices, window
-):
+def _rogers_satchell_core(open_prices, high_prices, low_prices, close_prices, window):
     """Numba-optimized Rogers-Satchell volatility calculation.
 
     Rogers-Satchell volatility captures drift-independent volatility,
@@ -160,9 +156,7 @@ def _garch_variance_core(returns, omega, alpha, beta):
     variance[0] = np.var(returns)
 
     for i in range(1, n):
-        variance[i] = (
-            omega + alpha * returns[i - 1] ** 2 + beta * variance[i - 1]
-        )
+        variance[i] = omega + alpha * returns[i - 1] ** 2 + beta * variance[i - 1]
 
     return np.sqrt(variance) * np.sqrt(252)
 
@@ -202,30 +196,30 @@ class VolatilityFeatures(BaseFeatureCalculator):
         features = pd.DataFrame(index=data.index)
 
         # Check what data is available
-        has_ohlc = all(col in data.columns for col in ['open', 'high', 'low', 'close'])
-        has_hlc = all(col in data.columns for col in ['high', 'low', 'close'])
-        has_close = 'close' in data.columns
+        has_ohlc = all(col in data.columns for col in ["open", "high", "low", "close"])
+        has_hlc = all(col in data.columns for col in ["high", "low", "close"])
+        has_close = "close" in data.columns
 
         if has_ohlc:
             # Calculate all OHLC-based volatilities
-            features['yang_zhang'] = self.yang_zhang(
-                data['open'], data['high'], data['low'], data['close']
+            features["yang_zhang"] = self.yang_zhang(
+                data["open"], data["high"], data["low"], data["close"]
             )
-            features['rogers_satchell'] = self.rogers_satchell(
-                data['open'], data['high'], data['low'], data['close']
+            features["rogers_satchell"] = self.rogers_satchell(
+                data["open"], data["high"], data["low"], data["close"]
             )
 
         if has_hlc:
-            features['garman_klass'] = self.garman_klass(
-                data['high'], data['low'], data['close']
+            features["garman_klass"] = self.garman_klass(
+                data["high"], data["low"], data["close"]
             )
-            features['parkinson'] = self.parkinson(data['high'], data['low'])
+            features["parkinson"] = self.parkinson(data["high"], data["low"])
 
         if has_close:
             # Basic volatility using common_features
-            returns = self._price_features.calculate_returns(data['close'])
-            features['volatility'] = self._price_features.calculate_volatility(returns)
-            features['vol_of_vol'] = self.volatility_of_volatility(data['close'])
+            returns = self._price_features.calculate_returns(data["close"])
+            features["volatility"] = self._price_features.calculate_volatility(returns)
+            features["vol_of_vol"] = self.volatility_of_volatility(data["close"])
 
         return features
 
@@ -262,9 +256,7 @@ class VolatilityFeatures(BaseFeatureCalculator):
             window,
         )
 
-        return pd.Series(
-            result, index=close_prices.index, name=f"yang_zhang_{window}"
-        )
+        return pd.Series(result, index=close_prices.index, name=f"yang_zhang_{window}")
 
     def garman_klass(
         self,
@@ -315,9 +307,7 @@ class VolatilityFeatures(BaseFeatureCalculator):
 
         result = _parkinson_core(high_prices.values, low_prices.values, window)
 
-        return pd.Series(
-            result, index=high_prices.index, name=f"parkinson_{window}"
-        )
+        return pd.Series(result, index=high_prices.index, name=f"parkinson_{window}")
 
     def rogers_satchell(
         self,
@@ -355,9 +345,7 @@ class VolatilityFeatures(BaseFeatureCalculator):
             result, index=close_prices.index, name=f"rogers_satchell_{window}"
         )
 
-    def close_to_close(
-        self, close_prices: pd.Series, window: int = 20
-    ) -> pd.Series:
+    def close_to_close(self, close_prices: pd.Series, window: int = 20) -> pd.Series:
         """Calculate standard close-to-close volatility.
 
         Delegates to PriceFeatures for consistency.
@@ -369,8 +357,10 @@ class VolatilityFeatures(BaseFeatureCalculator):
         Returns:
             Close-to-close volatility series
         """
-        returns = self._price_features.calculate_returns(close_prices, method='log')
-        return self._price_features.calculate_volatility(returns, window=window, annualize=True)
+        returns = self._price_features.calculate_returns(close_prices, method="log")
+        return self._price_features.calculate_volatility(
+            returns, window=window, annualize=True
+        )
 
     def garch_volatility(
         self,
@@ -400,9 +390,7 @@ class VolatilityFeatures(BaseFeatureCalculator):
             return pd.Series(index=returns.index, name="garch_volatility")
 
         try:
-            result = _garch_variance_core(
-                clean_returns.values, omega, alpha, beta
-            )
+            result = _garch_variance_core(clean_returns.values, omega, alpha, beta)
 
             # Align with original index
             vol_series = pd.Series(

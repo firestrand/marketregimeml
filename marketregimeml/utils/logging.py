@@ -37,9 +37,7 @@ def setup_logging(
         if level is None:
             level = "INFO"
         if format_string is None:
-            format_string = (
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            format_string = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
     # Configure root logger
     root_logger = logging.getLogger()

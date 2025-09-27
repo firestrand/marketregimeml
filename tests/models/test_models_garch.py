@@ -177,17 +177,13 @@ class TestGARCHRegimeDetector:
                 "spread": np.random.exponential(0.001, n_samples),
             }
         )
-        features.index = pd.date_range(
-            "2020-01-01", periods=n_samples, freq="D"
-        )
+        features.index = pd.date_range("2020-01-01", periods=n_samples, freq="D")
         return features
 
     @pytest.fixture
     def detector(self):
         """Create GARCH regime detector."""
-        return GARCHRegimeDetector(
-            p=1, q=1, n_regimes=3, volatility_column="returns"
-        )
+        return GARCHRegimeDetector(p=1, q=1, n_regimes=3, volatility_column="returns")
 
     def test_initialization(self):
         """Test detector initialization."""
@@ -227,9 +223,7 @@ class TestGARCHRegimeDetector:
 
         assert probas.shape == (len(sample_features), detector.n_regimes)
         assert np.allclose(probas.sum(axis=1), 1.0)  # Probabilities sum to 1
-        assert np.all(probas >= 0) and np.all(
-            probas <= 1
-        )  # Valid probabilities
+        assert np.all(probas >= 0) and np.all(probas <= 1)  # Valid probabilities
 
     def test_fit_predict(self, detector, sample_features):
         """Test combined fit and predict."""
@@ -277,9 +271,7 @@ class TestGARCHRegimeDetector:
         detector.fit(sample_features)
         regimes = detector.predict(sample_features)
 
-        characteristics = detector.get_regime_characteristics(
-            sample_features, regimes
-        )
+        characteristics = detector.get_regime_characteristics(sample_features, regimes)
 
         assert len(characteristics) == detector.n_regimes
 
@@ -330,9 +322,7 @@ class TestMSGARCHRegimeDetector:
 
         # Create returns with clear regime switches
         regime1 = np.random.normal(0.001, 0.01, 200)  # Low vol, positive drift
-        regime2 = np.random.normal(
-            -0.001, 0.03, 200
-        )  # High vol, negative drift
+        regime2 = np.random.normal(-0.001, 0.03, 200)  # High vol, negative drift
         regime3 = np.random.normal(0, 0.015, 200)  # Medium vol, no drift
 
         returns = np.concatenate([regime1, regime2, regime3])
@@ -477,6 +467,4 @@ class TestMSGARCHRegimeDetector:
             ms_detector.fit(features, max_iter=2)  # Very low iterations
 
             # Should warn about convergence
-            assert any(
-                "convergence" in str(warning.message).lower() for warning in w
-            )
+            assert any("convergence" in str(warning.message).lower() for warning in w)

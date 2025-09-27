@@ -37,9 +37,7 @@ class ConcreteRegimeDetector(BaseRegimeDetector):
     """Concrete implementation for testing abstract base class."""
 
     def __init__(self, n_regimes=3, random_state=None, **kwargs):
-        super().__init__(
-            n_regimes=n_regimes, random_state=random_state, **kwargs
-        )
+        super().__init__(n_regimes=n_regimes, random_state=random_state, **kwargs)
         # Use a simple test model instead of Mock for pickling
         self.model = SimpleTestModel(n_regimes)
 
@@ -219,13 +217,9 @@ class TestBaseRegimeDetector:
     ):
         """Test get_regime_statistics with provided regimes."""
         # Create deterministic regime sequence
-        regimes = np.array(
-            [0, 0, 1, 1, 2, 2] * 16 + [0, 0, 1, 2]
-        )  # 100 samples
+        regimes = np.array([0, 0, 1, 1, 2, 2] * 16 + [0, 0, 1, 2])  # 100 samples
 
-        stats = fitted_detector.get_regime_statistics(
-            sample_features, regimes=regimes
-        )
+        stats = fitted_detector.get_regime_statistics(sample_features, regimes=regimes)
 
         assert len(stats) == 3
         for regime in range(3):
@@ -294,9 +288,7 @@ class TestBaseRegimeDetector:
         self, fitted_detector, sample_features
     ):
         """Test transition matrix calculation using predicted regimes."""
-        trans_matrix = fitted_detector.get_transition_matrix(
-            features=sample_features
-        )
+        trans_matrix = fitted_detector.get_transition_matrix(features=sample_features)
 
         assert trans_matrix.shape == (3, 3)
         assert np.allclose(trans_matrix.sum(axis=1), 1.0)
@@ -330,8 +322,7 @@ class TestBaseRegimeDetector:
 
         # Check regime names
         assert all(
-            name in ["Bear", "Neutral", "Bull"]
-            for name in confidence_df["regime_name"]
+            name in ["Bear", "Neutral", "Bull"] for name in confidence_df["regime_name"]
         )
 
     def test_cross_validate(self, detector, sample_features):
@@ -422,9 +413,7 @@ class TestBaseRegimeDetector:
             assert loaded_detector.n_regimes == fitted_detector.n_regimes
             assert loaded_detector.is_fitted == fitted_detector.is_fitted
             assert loaded_detector.n_features == fitted_detector.n_features
-            assert (
-                loaded_detector.feature_names == fitted_detector.feature_names
-            )
+            assert loaded_detector.feature_names == fitted_detector.feature_names
 
         finally:
             Path(filepath).unlink(missing_ok=True)
@@ -441,9 +430,7 @@ class TestBaseRegimeDetector:
             f.write(b'{"test": "data"}')
 
         try:
-            with pytest.raises(
-                ValueError, match="Cannot load full model from JSON"
-            ):
+            with pytest.raises(ValueError, match="Cannot load full model from JSON"):
                 ConcreteRegimeDetector.load(filepath)
         finally:
             Path(filepath).unlink(missing_ok=True)
@@ -473,9 +460,7 @@ class TestBaseRegimeDetector:
         """Test setting regime names with wrong count."""
         wrong_names = {0: "Low", 1: "High"}  # Only 2 names for 3 regimes
 
-        with pytest.raises(
-            ValueError, match="Must provide names for all 3 regimes"
-        ):
+        with pytest.raises(ValueError, match="Must provide names for all 3 regimes"):
             detector.set_regime_names(wrong_names)
 
     def test_abstract_methods_not_implemented(self):
@@ -484,16 +469,12 @@ class TestBaseRegimeDetector:
         with pytest.raises(TypeError):
             BaseRegimeDetector()
 
-    def test_regime_statistics_empty_regime(
-        self, fitted_detector, sample_features
-    ):
+    def test_regime_statistics_empty_regime(self, fitted_detector, sample_features):
         """Test regime statistics handling when a regime has no samples."""
         # Create regimes where regime 2 never appears
         regimes = np.array([0, 1] * 50)  # Only regimes 0 and 1
 
-        stats = fitted_detector.get_regime_statistics(
-            sample_features, regimes=regimes
-        )
+        stats = fitted_detector.get_regime_statistics(sample_features, regimes=regimes)
 
         # Should only have stats for regimes that appeared
         assert len(stats) == 2
@@ -538,13 +519,9 @@ class TestBaseRegimeDetector:
     ):
         """Test entropy calculation in regime confidence."""
         # Mock predict_proba to return deterministic probabilities
-        with patch.object(
-            fitted_detector, "predict_proba"
-        ) as mock_predict_proba:
+        with patch.object(fitted_detector, "predict_proba") as mock_predict_proba:
             # High confidence case (low entropy)
-            high_conf_proba = np.array(
-                [[0.95, 0.025, 0.025], [0.85, 0.075, 0.075]]
-            )
+            high_conf_proba = np.array([[0.95, 0.025, 0.025], [0.85, 0.075, 0.075]])
             mock_predict_proba.return_value = high_conf_proba
 
             confidence_df = fitted_detector.get_regime_confidence(

@@ -19,11 +19,13 @@ from marketregimeml.utils.logging import get_logger
 try:  # pragma: no cover - optional dependency
     from numba import jit
 except Exception:
+
     def jit(*args, **kwargs):  # type: ignore
         def wrapper(func):
             return func
 
         return wrapper
+
 
 # Try to import entropy libraries
 try:
@@ -135,26 +137,26 @@ class StatisticalFeatures(BaseFeatureCalculator):
         features = pd.DataFrame(index=data.index)
 
         # Use returns if available, otherwise calculate from close
-        if 'returns' in data.columns:
-            returns = data['returns']
-        elif 'close' in data.columns:
-            returns = data['close'].pct_change()
+        if "returns" in data.columns:
+            returns = data["returns"]
+        elif "close" in data.columns:
+            returns = data["close"].pct_change()
         else:
             return features  # No suitable data
 
         # Basic statistics (delegating to common/base)
-        features['skewness'] = self.rolling_skewness(returns)
-        features['kurtosis'] = self.rolling_kurtosis(returns)
-        features['autocorr'] = self.autocorrelation(returns)
+        features["skewness"] = self.rolling_skewness(returns)
+        features["kurtosis"] = self.rolling_kurtosis(returns)
+        features["autocorr"] = self.autocorrelation(returns)
 
         # Advanced statistics
-        features['hurst'] = self.hurst_exponent(returns)
-        features['jarque_bera'] = self.jarque_bera_stat(returns)
+        features["hurst"] = self.hurst_exponent(returns)
+        features["jarque_bera"] = self.jarque_bera_stat(returns)
 
         # Entropy measures (if data is long enough)
         if len(returns) > 100:
-            features['shannon_entropy'] = self.shannon_entropy(returns)
-            features['approx_entropy'] = self.approximate_entropy(returns)
+            features["shannon_entropy"] = self.shannon_entropy(returns)
+            features["approx_entropy"] = self.approximate_entropy(returns)
 
         return features
 
@@ -183,9 +185,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
         """
         clean_data = data.fillna(0)
         result = _autocorrelation_core(clean_data.values, window, lag)
-        return pd.Series(
-            result, index=data.index, name=f"autocorr_{window}_lag{lag}"
-        )
+        return pd.Series(result, index=data.index, name=f"autocorr_{window}_lag{lag}")
 
     def partial_autocorrelation(
         self, data: pd.Series, window: int = 50, lag: int = 1
@@ -217,9 +217,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
                 except Exception:
                     pass
 
-        return pd.Series(
-            result, index=data.index, name=f"pacf_{window}_lag{lag}"
-        )
+        return pd.Series(result, index=data.index, name=f"pacf_{window}_lag{lag}")
 
     def jarque_bera_stat(self, data: pd.Series, window: int = 20) -> pd.Series:
         """Calculate rolling Jarque-Bera test statistic.
@@ -244,13 +242,9 @@ class StatisticalFeatures(BaseFeatureCalculator):
                 jb_stat, _ = stats.jarque_bera(segment)
                 result[i] = jb_stat
 
-        return pd.Series(
-            result, index=data.index, name=f"jarque_bera_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"jarque_bera_{window}")
 
-    def shapiro_wilk_stat(
-        self, data: pd.Series, window: int = 20
-    ) -> pd.Series:
+    def shapiro_wilk_stat(self, data: pd.Series, window: int = 20) -> pd.Series:
         """Calculate rolling Shapiro-Wilk test statistic.
 
         Another test for normality, more powerful for small samples.
@@ -275,9 +269,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
                 except Exception:
                     pass
 
-        return pd.Series(
-            result, index=data.index, name=f"shapiro_wilk_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"shapiro_wilk_{window}")
 
     def cross_correlation(
         self,
@@ -308,9 +300,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
                     seg1 = data1.iloc[i - window + 1 : i + 1]
                     seg2 = data2.iloc[i - window + 1 - lag : i + 1 - lag]
                 else:
-                    seg1 = data1.iloc[
-                        i - window + 1 + abs(lag) : i + 1 + abs(lag)
-                    ]
+                    seg1 = data1.iloc[i - window + 1 + abs(lag) : i + 1 + abs(lag)]
                     seg2 = data2.iloc[i - window + 1 : i + 1]
 
                 if len(seg1) == len(seg2):
@@ -321,9 +311,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
             result, index=data1.index, name=f"cross_corr_{window}_lag{lag}"
         )
 
-    def regime_stability(
-        self, regimes: pd.Series, window: int = 20
-    ) -> pd.Series:
+    def regime_stability(self, regimes: pd.Series, window: int = 20) -> pd.Series:
         """Calculate regime stability metric.
 
         Measures how stable/persistent regimes are over time.
@@ -450,9 +438,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
         for i in range(window - 1, len(data)):
             segment = data.iloc[i - window + 1 : i + 1].dropna()
 
-            if (
-                len(segment) >= window * 0.8
-            ):  # Need at least 80% non-NaN values
+            if len(segment) >= window * 0.8:  # Need at least 80% non-NaN values
                 try:
                     adf_result = adfuller(
                         segment, regression=regression, autolag=autolag
@@ -503,23 +489,23 @@ class StatisticalFeatures(BaseFeatureCalculator):
 
     def rolling_mean(self, data: pd.Series, window: int = 20) -> pd.Series:
         """Calculate rolling mean - delegates to base class."""
-        return self.rolling_operation(data, window, 'mean')
+        return self.rolling_operation(data, window, "mean")
 
     def rolling_std(self, data: pd.Series, window: int = 20) -> pd.Series:
         """Calculate rolling standard deviation - delegates to base class."""
-        return self.rolling_operation(data, window, 'std')
+        return self.rolling_operation(data, window, "std")
 
     def rolling_median(self, data: pd.Series, window: int = 20) -> pd.Series:
         """Calculate rolling median - delegates to base class."""
-        return self.rolling_operation(data, window, 'median')
+        return self.rolling_operation(data, window, "median")
 
     def rolling_min(self, data: pd.Series, window: int = 20) -> pd.Series:
         """Calculate rolling minimum - delegates to base class."""
-        return self.rolling_operation(data, window, 'min')
+        return self.rolling_operation(data, window, "min")
 
     def rolling_max(self, data: pd.Series, window: int = 20) -> pd.Series:
         """Calculate rolling maximum - delegates to base class."""
-        return self.rolling_operation(data, window, 'max')
+        return self.rolling_operation(data, window, "max")
 
     def rolling_quantile(
         self, data: pd.Series, window: int = 20, quantile: float = 0.5
@@ -534,9 +520,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
         Returns:
             Rolling quantile series
         """
-        result = data.rolling(window=window, min_periods=window).quantile(
-            quantile
-        )
+        result = data.rolling(window=window, min_periods=window).quantile(quantile)
         result.name = f"quantile_{window}_q{int(quantile*100)}"
         return result
 
@@ -553,15 +537,11 @@ class StatisticalFeatures(BaseFeatureCalculator):
         Returns:
             Rolling correlation series
         """
-        result = series1.rolling(window=window, min_periods=window).corr(
-            series2
-        )
+        result = series1.rolling(window=window, min_periods=window).corr(series2)
         result.name = f"correlation_{window}"
         return result
 
-    def rolling_statistics(
-        self, data: pd.Series, window: int = 20
-    ) -> pd.DataFrame:
+    def rolling_statistics(self, data: pd.Series, window: int = 20) -> pd.DataFrame:
         """Calculate comprehensive rolling statistics.
 
         Args:
@@ -619,9 +599,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
                 entropy = -np.sum(probs * np.log(probs))
                 result[i] = entropy
 
-        return pd.Series(
-            result, index=data.index, name=f"shannon_entropy_{window}"
-        )
+        return pd.Series(result, index=data.index, name=f"shannon_entropy_{window}")
 
     def approximate_entropy(
         self, data: pd.Series, window: int = 50, m: int = 2, r: float = 0.2
@@ -668,13 +646,9 @@ class StatisticalFeatures(BaseFeatureCalculator):
                 segment = data.iloc[i - window + 1 : i + 1].dropna().values
 
                 if len(segment) >= window:
-                    result[i] = self._approximate_entropy_fallback(
-                        segment, m, r
-                    )
+                    result[i] = self._approximate_entropy_fallback(segment, m, r)
 
-        return pd.Series(
-            result, index=data.index, name=f"approx_entropy_{window}_m{m}"
-        )
+        return pd.Series(result, index=data.index, name=f"approx_entropy_{window}_m{m}")
 
     def sample_entropy(
         self, data: pd.Series, window: int = 50, m: int = 2, r: float = 0.2
@@ -723,9 +697,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
                 if len(segment) >= window:
                     result[i] = self._sample_entropy_fallback(segment, m, r)
 
-        return pd.Series(
-            result, index=data.index, name=f"sample_entropy_{window}_m{m}"
-        )
+        return pd.Series(result, index=data.index, name=f"sample_entropy_{window}_m{m}")
 
     def permutation_entropy(
         self, data: pd.Series, window: int = 50, order: int = 3
@@ -752,9 +724,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
                 if len(segment) >= window:
                     try:
                         # Use antropy library
-                        permen = ant.perm_entropy(
-                            segment, order=order, normalize=False
-                        )
+                        permen = ant.perm_entropy(segment, order=order, normalize=False)
                         result[i] = permen
                     except (ValueError, RuntimeError) as e:
                         logger.debug(
@@ -770,9 +740,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
                 segment = data.iloc[i - window + 1 : i + 1].dropna().values
 
                 if len(segment) >= window:
-                    result[i] = self._permutation_entropy_fallback(
-                        segment, order
-                    )
+                    result[i] = self._permutation_entropy_fallback(segment, order)
 
         return pd.Series(
             result, index=data.index, name=f"perm_entropy_{window}_o{order}"
@@ -780,9 +748,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
 
     # ============== FALLBACK IMPLEMENTATIONS ==============
 
-    def _approximate_entropy_fallback(
-        self, U: np.ndarray, m: int, r: float
-    ) -> float:
+    def _approximate_entropy_fallback(self, U: np.ndarray, m: int, r: float) -> float:
         """Fallback implementation of approximate entropy."""
         N = len(U)
         r_scaled = r * np.std(U)
@@ -809,9 +775,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
         except Exception:
             return 0.0
 
-    def _sample_entropy_fallback(
-        self, U: np.ndarray, m: int, r: float
-    ) -> float:
+    def _sample_entropy_fallback(self, U: np.ndarray, m: int, r: float) -> float:
         """Fallback implementation of sample entropy."""
         N = len(U)
         r_scaled = r * np.std(U)
@@ -869,9 +833,7 @@ class StatisticalFeatures(BaseFeatureCalculator):
         if total == 0:
             return 0.0
 
-        probs = np.array(
-            [count / total for count in perm_count.values() if count > 0]
-        )
+        probs = np.array([count / total for count in perm_count.values() if count > 0])
 
         # Calculate entropy
         return -np.sum(probs * np.log(probs))

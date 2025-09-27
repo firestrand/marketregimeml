@@ -27,9 +27,7 @@ class TestHMMRegimeDetector:
         n_samples = 500
 
         # Generate synthetic regime-like data
-        regimes = np.random.choice(
-            [0, 1, 2], size=n_samples, p=[0.3, 0.4, 0.3]
-        )
+        regimes = np.random.choice([0, 1, 2], size=n_samples, p=[0.3, 0.4, 0.3])
 
         # Generate features based on regimes
         features = np.zeros((n_samples, 3))
@@ -38,15 +36,9 @@ class TestHMMRegimeDetector:
             n_regime = mask.sum()
             if n_regime > 0:
                 # Different distributions for each regime
-                features[mask, 0] = np.random.normal(
-                    i - 1, 0.5, n_regime
-                )  # Returns
-                features[mask, 1] = np.random.gamma(
-                    2 + i, 1, n_regime
-                )  # Volatility
-                features[mask, 2] = np.random.normal(
-                    0, 1 + i * 0.5, n_regime
-                )  # Volume
+                features[mask, 0] = np.random.normal(i - 1, 0.5, n_regime)  # Returns
+                features[mask, 1] = np.random.gamma(2 + i, 1, n_regime)  # Volatility
+                features[mask, 2] = np.random.normal(0, 1 + i * 0.5, n_regime)  # Volume
 
         return pd.DataFrame(
             features,
@@ -238,9 +230,7 @@ class TestHMMRegimeDetector:
         for i in range(3):
             mask = regimes == i
             if mask.sum() > 0:
-                mean_returns.append(
-                    sample_features.loc[mask, "returns"].mean()
-                )
+                mean_returns.append(sample_features.loc[mask, "returns"].mean())
             else:
                 mean_returns.append(0)
 
@@ -368,9 +358,7 @@ class TestHMMRegimeDetector:
 
     def test_initialization_failure_handling(self, sample_features):
         """Test handling of initialization failures."""
-        with patch(
-            "marketregimeml.models.hmm.hmm.GaussianHMM.fit"
-        ) as mock_fit:
+        with patch("marketregimeml.models.hmm.hmm.GaussianHMM.fit") as mock_fit:
             # Make first initialization fail, second succeed
             mock_fit.side_effect = [Exception("Init failed"), None]
 
@@ -381,9 +369,7 @@ class TestHMMRegimeDetector:
             mock_model.predict.return_value = np.array([0, 1, 2] * 167)[:500]
             mock_model.score.return_value = -1000.0
 
-            with patch.object(
-                detector, "_initialize_model", return_value=mock_model
-            ):
+            with patch.object(detector, "_initialize_model", return_value=mock_model):
                 # Should succeed with second initialization
                 detector.fit(sample_features, n_init=2)
 
@@ -393,16 +379,12 @@ class TestHMMRegimeDetector:
 
     def test_all_initializations_fail(self, sample_features):
         """Test error when all initializations fail."""
-        with patch(
-            "marketregimeml.models.hmm.hmm.GaussianHMM.fit"
-        ) as mock_fit:
+        with patch("marketregimeml.models.hmm.hmm.GaussianHMM.fit") as mock_fit:
             mock_fit.side_effect = Exception("Always fails")
 
             detector = HMMRegimeDetector(n_regimes=3, random_state=42)
 
-            with pytest.raises(
-                RuntimeError, match="All initializations failed"
-            ):
+            with pytest.raises(RuntimeError, match="All initializations failed"):
                 detector.fit(sample_features, n_init=2)
 
 
@@ -439,9 +421,7 @@ class TestHMMPersistence:
             loaded_predictions = loaded_detector.predict(sample_data)
 
             # Predictions should be the same
-            np.testing.assert_array_equal(
-                original_predictions, loaded_predictions
-            )
+            np.testing.assert_array_equal(original_predictions, loaded_predictions)
 
     def test_save_load_with_labels(self, tmp_path):
         """Test saving and loading model with regime labels."""
@@ -495,7 +475,9 @@ class TestHMMStatistics:
         assert isinstance(stats, pd.DataFrame)
         # Check for common statistical columns
         assert "count" in stats.columns or "proportion" in stats.columns
-        assert "avg_duration" in stats.columns or any("duration" in col for col in stats.columns)
+        assert "avg_duration" in stats.columns or any(
+            "duration" in col for col in stats.columns
+        )
         # Should have one row per regime
         assert len(stats) <= 3
 
@@ -687,15 +669,11 @@ class TestHMMEdgeCases:
     def test_n_iter_parameter(self, sample_data):
         """Test different numbers of iterations."""
         # Test with very few iterations
-        detector_few = HMMRegimeDetector(
-            n_regimes=2, n_iter=5, random_state=42
-        )
+        detector_few = HMMRegimeDetector(n_regimes=2, n_iter=5, random_state=42)
         detector_few.fit(sample_data)
 
         # Test with many iterations
-        detector_many = HMMRegimeDetector(
-            n_regimes=2, n_iter=200, random_state=42
-        )
+        detector_many = HMMRegimeDetector(n_regimes=2, n_iter=200, random_state=42)
         detector_many.fit(sample_data)
 
         # Both should work
@@ -895,9 +873,7 @@ class TestRegimeLabeling:
         bear_returns = np.random.normal(-0.002, 0.02, 100)
         sideways_returns = np.random.normal(0, 0.015, 100)
 
-        returns = np.concatenate(
-            [bull_returns, bear_returns, sideways_returns]
-        )
+        returns = np.concatenate([bull_returns, bear_returns, sideways_returns])
         volatility = np.abs(returns) * 2 + np.random.normal(0, 0.001, 300)
 
         features = pd.DataFrame({"returns": returns, "volatility": volatility})
@@ -974,9 +950,7 @@ class TestRegimeLabeling:
             labels = detector.label_regimes(features)
 
             assert len(labels) == n_regimes
-            assert all(
-                isinstance(label, str) for label in labels.values()
-            )
+            assert all(isinstance(label, str) for label in labels.values())
 
     def test_label_regimes_before_fit(self):
         """Test error when labeling regimes before fitting."""
@@ -1018,9 +992,7 @@ class TestCompleteWorkflow:
         sideways_market = np.random.normal(0, 0.015, 150)
 
         returns = np.concatenate([bull_market, bear_market, sideways_market])
-        volatility = np.abs(returns) * 1.5 + np.random.normal(
-            0, 0.002, n_samples
-        )
+        volatility = np.abs(returns) * 1.5 + np.random.normal(0, 0.002, n_samples)
 
         features = pd.DataFrame(
             {"returns": returns, "volatility": volatility},

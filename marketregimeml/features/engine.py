@@ -117,9 +117,7 @@ class FeatureEngine:
             ]
 
         # Check cache
-        cached_result = self._get_cached_features(
-            data, feature_types, use_cache
-        )
+        cached_result = self._get_cached_features(data, feature_types, use_cache)
         if cached_result is not None:
             return cached_result
 
@@ -127,9 +125,7 @@ class FeatureEngine:
         features = self._compute_selected_features(data, feature_types, kwargs)
 
         # Cache and return
-        self._cache_features_if_enabled(
-            data, feature_types, features, use_cache
-        )
+        self._cache_features_if_enabled(data, feature_types, features, use_cache)
         return features
 
     def _get_cached_features(
@@ -211,9 +207,7 @@ class FeatureEngine:
 
         return True
 
-    def _get_cache_key(
-        self, data: pd.DataFrame, feature_types: List[str]
-    ) -> str:
+    def _get_cache_key(self, data: pd.DataFrame, feature_types: List[str]) -> str:
         """Generate cache key for feature set.
 
         Args:
@@ -270,9 +264,7 @@ class FeatureEngine:
                 vol_features[f"garman_klass_{window}"] = vol
 
             elif indicator == "parkinson":
-                vol = self.volatility.parkinson(
-                    data["high"], data["low"], window
-                )
+                vol = self.volatility.parkinson(data["high"], data["low"], window)
                 vol_features[f"parkinson_{window}"] = vol
 
             elif indicator == "rogers_satchell":
@@ -287,9 +279,7 @@ class FeatureEngine:
 
         return vol_features
 
-    def _compute_entropy_features(
-        self, data: pd.DataFrame, **kwargs
-    ) -> pd.DataFrame:
+    def _compute_entropy_features(self, data: pd.DataFrame, **kwargs) -> pd.DataFrame:
         """Compute entropy features.
 
         Args:
@@ -311,9 +301,7 @@ class FeatureEngine:
                 entropy_features[f"shannon_entropy_{window}"] = entropy
 
             elif measure == "approximate":
-                entropy = self.entropy.approximate_entropy(
-                    data["close"], window
-                )
+                entropy = self.entropy.approximate_entropy(data["close"], window)
                 entropy_features[f"approximate_entropy_{window}"] = entropy
 
             elif measure == "sample":
@@ -321,9 +309,7 @@ class FeatureEngine:
                 entropy_features[f"sample_entropy_{window}"] = entropy
 
             elif measure == "permutation":
-                entropy = self.entropy.permutation_entropy(
-                    data["close"], window
-                )
+                entropy = self.entropy.permutation_entropy(data["close"], window)
                 entropy_features[f"permutation_entropy_{window}"] = entropy
 
         return entropy_features
@@ -351,8 +337,8 @@ class FeatureEngine:
 
         for feature in features:
             if feature == "mean":
-                stat_features[f"mean_{window}"] = (
-                    self.statistical.rolling_mean(close_prices, window)
+                stat_features[f"mean_{window}"] = self.statistical.rolling_mean(
+                    close_prices, window
                 )
 
             elif feature == "std":
@@ -361,13 +347,13 @@ class FeatureEngine:
                 )
 
             elif feature == "skew":
-                stat_features[f"skew_{window}"] = (
-                    self.statistical.rolling_skewness(close_prices, window)
+                stat_features[f"skew_{window}"] = self.statistical.rolling_skewness(
+                    close_prices, window
                 )
 
             elif feature == "kurtosis":
-                stat_features[f"kurtosis_{window}"] = (
-                    self.statistical.rolling_kurtosis(close_prices, window)
+                stat_features[f"kurtosis_{window}"] = self.statistical.rolling_kurtosis(
+                    close_prices, window
                 )
 
             elif feature == "min":
@@ -382,9 +368,7 @@ class FeatureEngine:
 
         return stat_features
 
-    def _compute_technical_features(
-        self, data: pd.DataFrame, **kwargs
-    ) -> pd.DataFrame:
+    def _compute_technical_features(self, data: pd.DataFrame, **kwargs) -> pd.DataFrame:
         """Compute technical indicators.
 
         Args:
@@ -494,12 +478,8 @@ class FeatureEngine:
             exclude_cols = ["open", "high", "low", "close", "volume"]
 
         # Separate columns to normalize and preserve
-        cols_to_normalize = [
-            col for col in features.columns if col not in exclude_cols
-        ]
-        preserved_cols = [
-            col for col in features.columns if col in exclude_cols
-        ]
+        cols_to_normalize = [col for col in features.columns if col not in exclude_cols]
+        preserved_cols = [col for col in features.columns if col in exclude_cols]
 
         if not cols_to_normalize:
             return features
@@ -512,9 +492,7 @@ class FeatureEngine:
         elif method == "robust":
             scaler = RobustScaler()
         else:
-            logger.warning(
-                f"Unknown normalization method {method}, using standard"
-            )
+            logger.warning(f"Unknown normalization method {method}, using standard")
             scaler = StandardScaler()
 
         # Fit and transform
@@ -571,19 +549,13 @@ class FeatureEngine:
         # Return selected features plus preserved columns
         return features[preserve_cols + selected_cols]
 
-    def _separate_columns(
-        self, features: pd.DataFrame
-    ) -> Tuple[List[str], List[str]]:
+    def _separate_columns(self, features: pd.DataFrame) -> Tuple[List[str], List[str]]:
         """Separate preserved OHLCV columns from feature columns."""
         preserve_cols = ["open", "high", "low", "close", "volume"]
-        feature_cols = [
-            col for col in features.columns if col not in preserve_cols
-        ]
+        feature_cols = [col for col in features.columns if col not in preserve_cols]
         return preserve_cols, feature_cols
 
-    def _apply_selection_method(
-        self, method: str, params: Dict[str, Any]
-    ) -> List[str]:
+    def _apply_selection_method(self, method: str, params: Dict[str, Any]) -> List[str]:
         """Apply the specified feature selection method."""
         selectors = {
             "variance": self._select_by_variance,
@@ -617,9 +589,7 @@ class FeatureEngine:
 
         # Calculate correlation matrix
         corr_matrix = features[feature_cols].corr().abs()
-        upper = corr_matrix.where(
-            np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
-        )
+        upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
 
         # Find features to drop
         to_drop = [col for col in upper.columns if any(upper[col] > threshold)]
@@ -698,17 +668,13 @@ class FeatureEngine:
 
         # Check highly correlated features
         corr_matrix = features[numeric_cols].corr().abs()
-        upper = corr_matrix.where(
-            np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
-        )
+        upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
 
         for col in upper.columns:
             high_corr = upper[col][upper[col] > 0.95]
             if not high_corr.empty:
                 for idx in high_corr.index:
-                    results["highly_correlated"].append(
-                        (col, idx, high_corr[idx])
-                    )
+                    results["highly_correlated"].append((col, idx, high_corr[idx]))
 
         return results
 
@@ -729,9 +695,7 @@ class FeatureEngine:
             self.cache.clear()
             logger.info("Feature cache cleared")
 
-    def compute_all_features(
-        self, data: pd.DataFrame, **kwargs
-    ) -> pd.DataFrame:
+    def compute_all_features(self, data: pd.DataFrame, **kwargs) -> pd.DataFrame:
         """Compute all available features.
 
         Args:

@@ -79,9 +79,7 @@ class TestRegimePlotter:
     @patch("matplotlib.pyplot.show")
     def test_plot_regimes(self, mock_show, plotter, sample_data):
         """Test plot_regimes method."""
-        fig = plotter.plot_regimes(
-            sample_data["prices"], sample_data["regimes"]
-        )
+        fig = plotter.plot_regimes(sample_data["prices"], sample_data["regimes"])
 
         assert fig is not None
         assert isinstance(fig, plt.Figure)
@@ -106,9 +104,7 @@ class TestRegimePlotter:
     def test_plot_transitions(self, mock_show, plotter, sample_data):
         """Test plot_transitions method."""
         # Create transition matrix
-        trans_matrix = np.array(
-            [[0.7, 0.2, 0.1], [0.3, 0.5, 0.2], [0.2, 0.3, 0.5]]
-        )
+        trans_matrix = np.array([[0.7, 0.2, 0.1], [0.3, 0.5, 0.2], [0.2, 0.3, 0.5]])
 
         fig = plotter.plot_transitions(trans_matrix)
 
@@ -167,9 +163,7 @@ class TestRegimePlotter:
     @patch("matplotlib.pyplot.show")
     def test_plot_returns_by_regime(self, mock_show, plotter, sample_data):
         """Test plot_returns_by_regime method."""
-        returns = pd.Series(
-            np.random.randn(100) * 0.01, index=sample_data["dates"]
-        )
+        returns = pd.Series(np.random.randn(100) * 0.01, index=sample_data["dates"])
 
         fig = plotter.plot_returns_by_regime(returns, sample_data["regimes"])
 
@@ -252,9 +246,7 @@ class TestStandalonePlotFunctions:
     @patch("matplotlib.pyplot.show")
     def test_plot_transition_matrix_heatmap(self, mock_show):
         """Test plot_transition_matrix_heatmap function."""
-        trans_matrix = np.array(
-            [[0.7, 0.2, 0.1], [0.3, 0.5, 0.2], [0.2, 0.3, 0.5]]
-        )
+        trans_matrix = np.array([[0.7, 0.2, 0.1], [0.3, 0.5, 0.2], [0.2, 0.3, 0.5]])
 
         fig = plot_transition_matrix_heatmap(trans_matrix)
 

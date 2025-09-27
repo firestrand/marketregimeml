@@ -197,9 +197,7 @@ class TestGMMRegimeDetector:
         detector.fit(sample_features)
 
         # Calculate outlier scores
-        scores = detector.get_outlier_scores(
-            sample_features, threshold_percentile=95
-        )
+        scores = detector.get_outlier_scores(sample_features, threshold_percentile=95)
 
         assert isinstance(scores, pd.Series)
         assert len(scores) == len(sample_features)
@@ -226,9 +224,7 @@ class TestGMMRegimeDetector:
         for i in range(3):
             mask = regimes == i
             if mask.sum() > 0:
-                mean_features.append(
-                    sample_features.loc[mask, "feature1"].mean()
-                )
+                mean_features.append(sample_features.loc[mask, "feature1"].mean())
             else:
                 mean_features.append(0)
 
@@ -363,9 +359,7 @@ class TestGMMRegimeDetector:
 
     def test_warm_start(self, sample_features):
         """Test warm start functionality."""
-        detector = GMMRegimeDetector(
-            n_regimes=3, warm_start=True, random_state=42
-        )
+        detector = GMMRegimeDetector(n_regimes=3, warm_start=True, random_state=42)
 
         # First fit
         detector.fit(sample_features[:250])
@@ -381,14 +375,10 @@ class TestGMMRegimeDetector:
     def test_regularization(self, sample_features):
         """Test covariance regularization."""
         # Very small regularization
-        detector1 = GMMRegimeDetector(
-            n_regimes=3, reg_covar=1e-10, random_state=42
-        )
+        detector1 = GMMRegimeDetector(n_regimes=3, reg_covar=1e-10, random_state=42)
 
         # Larger regularization
-        detector2 = GMMRegimeDetector(
-            n_regimes=3, reg_covar=1e-3, random_state=42
-        )
+        detector2 = GMMRegimeDetector(n_regimes=3, reg_covar=1e-3, random_state=42)
 
         detector1.fit(sample_features)
         detector2.fit(sample_features)
@@ -402,9 +392,7 @@ class TestGMMRegimeDetector:
 
         # With higher regularization, diagonal elements should be larger
         if detector1.covariance_type == "full":
-            assert np.mean(np.diagonal(cov2[0])) >= np.mean(
-                np.diagonal(cov1[0])
-            )
+            assert np.mean(np.diagonal(cov2[0])) >= np.mean(np.diagonal(cov1[0]))
 
     def test_multiple_initializations(self, sample_features):
         """Test multiple n_init parameter."""

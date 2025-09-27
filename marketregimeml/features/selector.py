@@ -55,9 +55,7 @@ class FeatureSelector:
 
             selector_key = f"variance_{threshold}"
             if selector_key not in self.selectors:
-                self.selectors[selector_key] = VarianceThreshold(
-                    threshold=threshold
-                )
+                self.selectors[selector_key] = VarianceThreshold(threshold=threshold)
 
             # Fit selector
             self.selectors[selector_key].fit(features[numeric_cols])
@@ -66,9 +64,7 @@ class FeatureSelector:
             ]
 
             # Add back non-numeric columns
-            non_numeric_cols = features.select_dtypes(
-                exclude=[np.number]
-            ).columns
+            non_numeric_cols = features.select_dtypes(exclude=[np.number]).columns
             if len(non_numeric_cols) > 0:
                 selected_features = pd.concat(
                     [selected_features, features[non_numeric_cols]], axis=1
@@ -76,9 +72,7 @@ class FeatureSelector:
 
             # Identify removed features
             removed_features = [
-                col
-                for col in numeric_cols
-                if col not in selected_features.columns
+                col for col in numeric_cols if col not in selected_features.columns
             ]
 
             logger.info(
@@ -126,9 +120,7 @@ class FeatureSelector:
             }
 
             if score_func not in score_functions:
-                logger.warning(
-                    f"Unknown score function: {score_func}, using f_classif"
-                )
+                logger.warning(f"Unknown score function: {score_func}, using f_classif")
                 score_func = "f_classif"
 
             # Create selector
@@ -156,9 +148,7 @@ class FeatureSelector:
             )
 
             # Add back non-numeric columns
-            non_numeric_cols = features.select_dtypes(
-                exclude=[np.number]
-            ).columns
+            non_numeric_cols = features.select_dtypes(exclude=[np.number]).columns
             if len(non_numeric_cols) > 0:
                 selected_features = pd.concat(
                     [selected_features, features[non_numeric_cols]], axis=1
@@ -166,9 +156,7 @@ class FeatureSelector:
 
             # Get feature scores
             scores = self.selectors[selector_key].scores_
-            feature_scores = {
-                col: score for col, score in zip(numeric_cols, scores)
-            }
+            feature_scores = {col: score for col, score in zip(numeric_cols, scores)}
 
             logger.info(
                 f"K-best selection: selected {len(selected_cols)} features using {score_func}"
@@ -217,8 +205,7 @@ class FeatureSelector:
             Scikit-learn model instance
         """
         is_classification = (
-            target.dtype == "object"
-            or len(target.unique()) < len(target) * 0.05
+            target.dtype == "object" or len(target.unique()) < len(target) * 0.05
         )
 
         if method != "random_forest":
@@ -254,18 +241,14 @@ class FeatureSelector:
 
         if threshold is not None:
             return [
-                name
-                for name, imp in feature_importances.items()
-                if imp >= threshold
+                name for name, imp in feature_importances.items() if imp >= threshold
             ]
 
         # Default: use mean importance as threshold
         mean_importance = np.mean(list(feature_importances.values()))
         logger.info(f"Using mean importance threshold: {mean_importance:.4f}")
         return [
-            name
-            for name, imp in feature_importances.items()
-            if imp >= mean_importance
+            name for name, imp in feature_importances.items() if imp >= mean_importance
         ]
 
     def select_by_importance(
@@ -293,9 +276,7 @@ class FeatureSelector:
 
         try:
             # Prepare data
-            X, y, numeric_cols = self._prepare_data_for_importance(
-                features, target
-            )
+            X, y, numeric_cols = self._prepare_data_for_importance(features, target)
 
             if len(X) == 0:
                 logger.warning("No valid data for importance calculation")
@@ -317,9 +298,7 @@ class FeatureSelector:
             )
 
             # Include non-numeric columns in result
-            non_numeric_cols = list(
-                features.select_dtypes(exclude=[np.number]).columns
-            )
+            non_numeric_cols = list(features.select_dtypes(exclude=[np.number]).columns)
             all_selected_cols = selected_feature_names + non_numeric_cols
             selected_features = features[all_selected_cols]
 
@@ -377,16 +356,10 @@ class FeatureSelector:
                 return features, {}
 
             # Select base estimator
-            if (
-                y.dtype == "object" or len(y.unique()) < len(y) * 0.05
-            ):  # Classification
-                estimator = RandomForestClassifier(
-                    n_estimators=50, random_state=42
-                )
+            if y.dtype == "object" or len(y.unique()) < len(y) * 0.05:  # Classification
+                estimator = RandomForestClassifier(n_estimators=50, random_state=42)
             else:  # Regression
-                estimator = RandomForestRegressor(
-                    n_estimators=50, random_state=42
-                )
+                estimator = RandomForestRegressor(n_estimators=50, random_state=42)
 
             # Create RFE selector
             selector_key = f"rfe_{n_features}_{step}"
@@ -406,9 +379,7 @@ class FeatureSelector:
             selected_features = features[selected_cols]
 
             # Add back non-numeric columns
-            non_numeric_cols = features.select_dtypes(
-                exclude=[np.number]
-            ).columns
+            non_numeric_cols = features.select_dtypes(exclude=[np.number]).columns
             if len(non_numeric_cols) > 0:
                 selected_features = pd.concat(
                     [selected_features, features[non_numeric_cols]], axis=1
@@ -416,22 +387,16 @@ class FeatureSelector:
 
             # Get feature rankings
             rankings = self.selectors[selector_key].ranking_
-            feature_rankings = {
-                col: rank for col, rank in zip(numeric_cols, rankings)
-            }
+            feature_rankings = {col: rank for col, rank in zip(numeric_cols, rankings)}
 
-            logger.info(
-                f"RFE selection: selected {len(selected_cols)} features"
-            )
+            logger.info(f"RFE selection: selected {len(selected_cols)} features")
             return selected_features, feature_rankings
 
         except Exception as e:
             logger.error(f"Error in RFE selection: {e}")
             return features, {}
 
-    def get_feature_importance(
-        self, method: Optional[str] = None
-    ) -> Dict[str, float]:
+    def get_feature_importance(self, method: Optional[str] = None) -> Dict[str, float]:
         """Get stored feature importance scores.
 
         Args:
@@ -464,12 +429,8 @@ class FeatureSelector:
             Tuple of (selected feature names, method results)
         """
         method_handlers = {
-            "variance": lambda: self.select_by_variance(
-                features, **method_params
-            ),
-            "k_best": lambda: self.select_k_best(
-                features, target, **method_params
-            ),
+            "variance": lambda: self.select_by_variance(features, **method_params),
+            "k_best": lambda: self.select_k_best(features, target, **method_params),
             "importance": lambda: self.select_by_importance(
                 features, target, **method_params
             ),
@@ -533,9 +494,7 @@ class FeatureSelector:
             }
         else:
             logger.warning(f"Unknown voting method: {voting}, using union")
-            return self._combine_feature_sets(
-                all_selections, "union", num_methods
-            )
+            return self._combine_feature_sets(all_selections, "union", num_methods)
 
     def combine_selection_methods(
         self,
@@ -567,10 +526,8 @@ class FeatureSelector:
                 method_name = method_config["method"]
                 method_params = method_config.get("params", {})
 
-                selected_features, method_result = (
-                    self._apply_selection_method(
-                        method_name, features, target, method_params
-                    )
+                selected_features, method_result = self._apply_selection_method(
+                    method_name, features, target, method_params
                 )
 
                 if selected_features:

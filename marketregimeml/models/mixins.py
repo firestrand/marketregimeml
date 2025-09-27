@@ -4,9 +4,8 @@ Provides reusable functionality that can be mixed into model classes.
 Following Single Responsibility Principle - each mixin handles one aspect.
 """
 
-from typing import Dict, Any, Optional, List, Tuple, Union
+from typing import Dict, Any, Optional, Tuple, Union
 from pathlib import Path
-from datetime import datetime
 import warnings
 
 import numpy as np
@@ -389,7 +388,9 @@ class CrossValidationMixin:
                 train_score = model._compute_log_likelihood(train_data)
                 test_score = model._compute_log_likelihood(test_data)
             elif scoring == "aic":
-                train_score = -model._compute_aic(train_data)  # Negative for higher=better
+                train_score = -model._compute_aic(
+                    train_data
+                )  # Negative for higher=better
                 test_score = -model._compute_aic(test_data)
             elif scoring == "bic":
                 train_score = -model._compute_bic(train_data)

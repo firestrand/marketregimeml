@@ -4,7 +4,7 @@ Provides shared functionality for all feature calculators to eliminate
 code duplication and ensure consistency.
 """
 
-from typing import Optional, Union, Callable, Any
+from typing import Optional, Union
 import numpy as np
 import pandas as pd
 from abc import ABC, abstractmethod
@@ -14,7 +14,9 @@ class BaseFeatureCalculator(ABC):
     """Base class for all feature calculators with common utilities."""
 
     @staticmethod
-    def validate_window(window: int, min_window: int = 2, max_window: Optional[int] = None) -> None:
+    def validate_window(
+        window: int, min_window: int = 2, max_window: Optional[int] = None
+    ) -> None:
         """Validate window size parameter.
 
         Parameters
@@ -66,8 +68,8 @@ class BaseFeatureCalculator(ABC):
     @staticmethod
     def handle_nan(
         data: Union[pd.Series, pd.DataFrame],
-        method: str = 'drop',
-        fill_value: float = 0
+        method: str = "drop",
+        fill_value: float = 0,
     ) -> Union[pd.Series, pd.DataFrame]:
         """Handle NaN values in data.
 
@@ -85,14 +87,14 @@ class BaseFeatureCalculator(ABC):
         pd.Series or pd.DataFrame
             Data with NaN values handled
         """
-        if method == 'drop':
+        if method == "drop":
             return data.dropna()
-        elif method == 'fill':
+        elif method == "fill":
             return data.fillna(fill_value)
-        elif method == 'forward':
-            return data.fillna(method='ffill')
-        elif method == 'backward':
-            return data.fillna(method='bfill')
+        elif method == "forward":
+            return data.fillna(method="ffill")
+        elif method == "backward":
+            return data.fillna(method="bfill")
         else:
             raise ValueError(f"Unknown NaN handling method: {method}")
 
@@ -102,7 +104,7 @@ class BaseFeatureCalculator(ABC):
         window: int,
         operation: str,
         min_periods: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> pd.Series:
         """Perform rolling window operation.
 
@@ -131,26 +133,26 @@ class BaseFeatureCalculator(ABC):
 
         rolling = data.rolling(window=window, min_periods=min_periods)
 
-        if operation == 'mean':
+        if operation == "mean":
             return rolling.mean(**kwargs)
-        elif operation == 'std':
+        elif operation == "std":
             return rolling.std(**kwargs)
-        elif operation == 'var':
+        elif operation == "var":
             return rolling.var(**kwargs)
-        elif operation == 'min':
+        elif operation == "min":
             return rolling.min(**kwargs)
-        elif operation == 'max':
+        elif operation == "max":
             return rolling.max(**kwargs)
-        elif operation == 'sum':
+        elif operation == "sum":
             return rolling.sum(**kwargs)
-        elif operation == 'median':
+        elif operation == "median":
             return rolling.median(**kwargs)
-        elif operation == 'skew':
+        elif operation == "skew":
             return rolling.skew(**kwargs)
-        elif operation == 'kurt':
+        elif operation == "kurt":
             return rolling.kurt(**kwargs)
-        elif operation == 'quantile':
-            q = kwargs.get('q', 0.5)
+        elif operation == "quantile":
+            q = kwargs.get("q", 0.5)
             return rolling.quantile(q)
         else:
             raise ValueError(f"Unknown rolling operation: {operation}")
@@ -160,8 +162,8 @@ class BaseFeatureCalculator(ABC):
         data: pd.Series,
         span: Optional[int] = None,
         alpha: Optional[float] = None,
-        operation: str = 'mean',
-        **kwargs
+        operation: str = "mean",
+        **kwargs,
     ) -> pd.Series:
         """Perform exponentially weighted operation.
 
@@ -190,20 +192,18 @@ class BaseFeatureCalculator(ABC):
         else:
             raise ValueError("Either span or alpha must be provided")
 
-        if operation == 'mean':
+        if operation == "mean":
             return ewm.mean()
-        elif operation == 'std':
+        elif operation == "std":
             return ewm.std()
-        elif operation == 'var':
+        elif operation == "var":
             return ewm.var()
         else:
             raise ValueError(f"Unknown EWM operation: {operation}")
 
     @staticmethod
     def calculate_returns(
-        prices: pd.Series,
-        method: str = 'simple',
-        periods: int = 1
+        prices: pd.Series, method: str = "simple", periods: int = 1
     ) -> pd.Series:
         """Calculate returns from prices.
 
@@ -221,18 +221,16 @@ class BaseFeatureCalculator(ABC):
         pd.Series
             Returns series
         """
-        if method == 'simple':
+        if method == "simple":
             return prices.pct_change(periods)
-        elif method == 'log':
+        elif method == "log":
             return np.log(prices / prices.shift(periods))
         else:
             raise ValueError(f"Unknown return method: {method}")
 
     @staticmethod
     def normalize(
-        data: pd.Series,
-        method: str = 'zscore',
-        window: Optional[int] = None
+        data: pd.Series, method: str = "zscore", window: Optional[int] = None
     ) -> pd.Series:
         """Normalize data.
 
@@ -251,24 +249,24 @@ class BaseFeatureCalculator(ABC):
             Normalized data
         """
         if window is not None:
-            if method == 'zscore':
+            if method == "zscore":
                 mean = data.rolling(window).mean()
                 std = data.rolling(window).std()
                 return (data - mean) / std.replace(0, np.nan)
-            elif method == 'minmax':
+            elif method == "minmax":
                 min_val = data.rolling(window).min()
                 max_val = data.rolling(window).max()
                 return (data - min_val) / (max_val - min_val).replace(0, np.nan)
-            elif method == 'robust':
+            elif method == "robust":
                 median = data.rolling(window).median()
                 mad = (data - median).abs().rolling(window).median()
                 return (data - median) / (1.4826 * mad).replace(0, np.nan)
         else:
-            if method == 'zscore':
+            if method == "zscore":
                 return (data - data.mean()) / data.std()
-            elif method == 'minmax':
+            elif method == "minmax":
                 return (data - data.min()) / (data.max() - data.min())
-            elif method == 'robust':
+            elif method == "robust":
                 median = data.median()
                 mad = (data - median).abs().median()
                 return (data - median) / (1.4826 * mad)
@@ -289,7 +287,6 @@ class BaseFeatureCalculator(ABC):
         pd.DataFrame
             Calculated features
         """
-        pass
 
     def validate_and_prepare(self, data: pd.DataFrame) -> pd.DataFrame:
         """Validate and prepare data for feature calculation.

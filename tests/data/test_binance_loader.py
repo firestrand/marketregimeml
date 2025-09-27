@@ -27,9 +27,7 @@ class TestBinanceDataLoader(unittest.TestCase):
 
         # Test testnet initialization
         testnet_loader = BinanceDataLoader(testnet=True)
-        self.assertEqual(
-            testnet_loader.base_url, "https://testnet.binance.vision"
-        )
+        self.assertEqual(testnet_loader.base_url, "https://testnet.binance.vision")
 
     def test_normalize_symbol(self):
         """Test symbol normalization."""

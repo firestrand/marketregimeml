@@ -31,7 +31,6 @@ class ValidationStrategy(ABC):
         Yields:
             Tuples of (train_indices, test_indices)
         """
-        pass
 
     @abstractmethod
     def get_n_splits(self) -> int:
@@ -40,7 +39,6 @@ class ValidationStrategy(ABC):
         Returns:
             Number of splits
         """
-        pass
 
 
 class TimeSeriesSplitStrategy(ValidationStrategy):
@@ -71,9 +69,7 @@ class TimeSeriesSplitStrategy(ValidationStrategy):
         self.gap = gap
         self.expanding = expanding
         self.train_size = train_size
-        logger.debug(
-            f"TimeSeriesSplitStrategy initialized with {n_splits} splits"
-        )
+        logger.debug(f"TimeSeriesSplitStrategy initialized with {n_splits} splits")
 
     def split(
         self, X: np.ndarray, y: Optional[np.ndarray] = None, **kwargs
@@ -140,10 +136,7 @@ class TimeSeriesSplitStrategy(ValidationStrategy):
                     train_start = 0
 
             # Ensure we have enough training data
-            if (
-                train_end < train_start
-                or train_end - train_start < min_train_size - 1
-            ):
+            if train_end < train_start or train_end - train_start < min_train_size - 1:
                 continue
 
             train_idx = np.arange(train_start, train_end + 1)
@@ -327,9 +320,7 @@ class RegimeAwareStrategy(ValidationStrategy):
         self.n_splits = n_splits
         self.min_regime_samples = min_regime_samples
         self.stratify = stratify
-        logger.debug(
-            f"RegimeAwareStrategy initialized with stratify={stratify}"
-        )
+        logger.debug(f"RegimeAwareStrategy initialized with stratify={stratify}")
 
     def split(
         self,
@@ -362,13 +353,9 @@ class RegimeAwareStrategy(ValidationStrategy):
             return
 
         # Generate regime-aware splits
-        yield from self._generate_regime_splits(
-            X, regimes, transitions, n_blocks
-        )
+        yield from self._generate_regime_splits(X, regimes, transitions, n_blocks)
 
-    def _fallback_split(
-        self, X: np.ndarray
-    ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
+    def _fallback_split(self, X: np.ndarray) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
         """Fall back to regular k-fold when no regimes provided."""
         logger.warning("No regimes provided, using regular k-fold")
         base_cv = KFold(n_splits=self.n_splits, shuffle=False)
@@ -441,9 +428,7 @@ class RegimeAwareStrategy(ValidationStrategy):
 
         return train_blocks, test_blocks
 
-    def _should_yield_split(
-        self, train_idx: np.ndarray, regimes: np.ndarray
-    ) -> bool:
+    def _should_yield_split(self, train_idx: np.ndarray, regimes: np.ndarray) -> bool:
         """Check if split should be yielded based on stratification requirements."""
         if not self.stratify:
             return True
@@ -481,9 +466,7 @@ class ValidationContext:
             strategy: Initial validation strategy
         """
         self.strategy = strategy
-        logger.debug(
-            f"ValidationContext initialized with {type(strategy).__name__}"
-        )
+        logger.debug(f"ValidationContext initialized with {type(strategy).__name__}")
 
     def set_strategy(self, strategy: ValidationStrategy):
         """Set new validation strategy.

@@ -293,9 +293,7 @@ class ParameterValidator:
 
         # Ensure 2D
         if features.ndim == 1:
-            raise ValueError(
-                "Features must be 2D array (n_samples, n_features)"
-            )
+            raise ValueError("Features must be 2D array (n_samples, n_features)")
 
         if features.ndim != 2:
             raise ValueError(f"Features must be 2D, got {features.ndim}D")
@@ -410,9 +408,7 @@ def validate_fitted(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if not hasattr(self, "is_fitted") or not self.is_fitted:
-            raise ValueError(
-                f"Model must be fitted before calling {method.__name__}"
-            )
+            raise ValueError(f"Model must be fitted before calling {method.__name__}")
         return method(self, *args, **kwargs)
 
     return wrapper
@@ -500,9 +496,7 @@ class RegimeValidator:
         return regimes
 
     @staticmethod
-    def validate_transition_matrix(
-        matrix: np.ndarray, n_regimes: int
-    ) -> np.ndarray:
+    def validate_transition_matrix(matrix: np.ndarray, n_regimes: int) -> np.ndarray:
         """Validate regime transition matrix.
 
         Parameters
@@ -537,8 +531,6 @@ class RegimeValidator:
 
         # Check for valid probabilities
         if (matrix < 0).any() or (matrix > 1).any():
-            raise ValueError(
-                "Transition probabilities must be between 0 and 1"
-            )
+            raise ValueError("Transition probabilities must be between 0 and 1")
 
         return matrix

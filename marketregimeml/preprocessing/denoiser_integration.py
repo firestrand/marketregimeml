@@ -43,7 +43,9 @@ def get_denoiser(src_path: Optional[str] = None, **kwargs: Any):
         return None
 
 
-def denoise_series(values: np.ndarray, steps: Optional[int] = None, **kwargs: Any) -> Optional[np.ndarray]:
+def denoise_series(
+    values: np.ndarray, steps: Optional[int] = None, **kwargs: Any
+) -> Optional[np.ndarray]:
     """Denoise a 1D price series with the external denoiser if available.
 
     Args:
@@ -67,4 +69,3 @@ def denoise_series(values: np.ndarray, steps: Optional[int] = None, **kwargs: An
         return y.astype(float)
     except Exception:
         return None
-

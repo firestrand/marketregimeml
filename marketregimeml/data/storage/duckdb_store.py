@@ -113,13 +113,10 @@ class DuckDBStore:
 
     def read_ohlcv(self, symbol: str, timeframe: str) -> pd.DataFrame:
         """Read full OHLCV history for symbol/timeframe."""
-        df = (
-            self.con.execute(
-                "SELECT timestamp, open, high, low, close, volume FROM ohlcv WHERE symbol = ? AND timeframe = ? ORDER BY timestamp",
-                [symbol, timeframe],
-            )
-            .fetchdf()
-        )
+        df = self.con.execute(
+            "SELECT timestamp, open, high, low, close, volume FROM ohlcv WHERE symbol = ? AND timeframe = ? ORDER BY timestamp",
+            [symbol, timeframe],
+        ).fetchdf()
         if df.empty:
             return df
         return df.set_index("timestamp")
@@ -153,11 +150,18 @@ class DuckDBStore:
         }
 
         if base_timeframe not in interval_map or target_timeframe not in interval_map:
-            raise ValueError(f"Unsupported timeframe aggregation: {base_timeframe} -> {target_timeframe}")
+            raise ValueError(
+                f"Unsupported timeframe aggregation: {base_timeframe} -> {target_timeframe}"
+            )
 
         base_minutes = [
-            ("MINUTE", 1), ("MINUTE", 5), ("MINUTE", 15), ("MINUTE", 30),
-            ("HOUR", 1), ("HOUR", 4), ("DAY", 1)
+            ("MINUTE", 1),
+            ("MINUTE", 5),
+            ("MINUTE", 15),
+            ("MINUTE", 30),
+            ("HOUR", 1),
+            ("HOUR", 4),
+            ("DAY", 1),
         ]
         # Simple guard: ensure target interval is multiple of base in minutes/hours
         # Rely on DuckDB to aggregate; if base is coarser than target, return empty
@@ -185,13 +189,10 @@ class DuckDBStore:
 
     def get_last_timestamp(self, symbol: str, timeframe: str) -> Optional[pd.Timestamp]:
         """Get most recent timestamp stored for a symbol/timeframe."""
-        df = (
-            self.con.execute(
-                "SELECT max(timestamp) AS last_ts FROM ohlcv WHERE symbol = ? AND timeframe = ?",
-                [symbol, timeframe],
-            )
-            .fetchdf()
-        )
+        df = self.con.execute(
+            "SELECT max(timestamp) AS last_ts FROM ohlcv WHERE symbol = ? AND timeframe = ?",
+            [symbol, timeframe],
+        ).fetchdf()
         if df.empty or df.loc[0, "last_ts"] is None:
             return None
         return pd.Timestamp(df.loc[0, "last_ts"])

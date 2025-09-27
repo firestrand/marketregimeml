@@ -41,12 +41,8 @@ class FeaturePreprocessor:
         strategy_handlers = {
             "drop": self._handle_drop_strategy,
             "interpolate": self._handle_interpolate_strategy,
-            "mean": lambda df, **kw: self._handle_sklearn_imputer(
-                df, "mean", **kw
-            ),
-            "median": lambda df, **kw: self._handle_sklearn_imputer(
-                df, "median", **kw
-            ),
+            "mean": lambda df, **kw: self._handle_sklearn_imputer(df, "mean", **kw),
+            "median": lambda df, **kw: self._handle_sklearn_imputer(df, "median", **kw),
             "knn": self._handle_knn_imputer,
             "forward_fill": lambda df, **kw: df.fillna(method="ffill"),
             "backward_fill": lambda df, **kw: df.fillna(method="bfill"),
@@ -82,9 +78,7 @@ class FeaturePreprocessor:
         method = kwargs.get("method", "linear")
         limit = kwargs.get("limit", None)
         features_clean = features_clean.interpolate(method=method, limit=limit)
-        features_clean = features_clean.fillna(method="ffill").fillna(
-            method="bfill"
-        )
+        features_clean = features_clean.fillna(method="ffill").fillna(method="bfill")
         logger.debug(f"Applied interpolation with method: {method}")
         return features_clean
 
@@ -93,9 +87,7 @@ class FeaturePreprocessor:
     ) -> pd.DataFrame:
         """Handle sklearn SimpleImputer strategies."""
         imputer_key = f"{strategy}_imputer"
-        numeric_cols = features_clean.select_dtypes(
-            include=[np.number]
-        ).columns
+        numeric_cols = features_clean.select_dtypes(include=[np.number]).columns
 
         if imputer_key not in self.imputers:
             self.imputers[imputer_key] = SimpleImputer(strategy=strategy)
@@ -113,9 +105,7 @@ class FeaturePreprocessor:
         """Handle KNN imputation strategy."""
         n_neighbors = kwargs.get("n_neighbors", 5)
         imputer_key = f"knn_imputer_{n_neighbors}"
-        numeric_cols = features_clean.select_dtypes(
-            include=[np.number]
-        ).columns
+        numeric_cols = features_clean.select_dtypes(include=[np.number]).columns
 
         if imputer_key not in self.imputers:
             self.imputers[imputer_key] = KNNImputer(n_neighbors=n_neighbors)
@@ -189,9 +179,7 @@ class FeaturePreprocessor:
         }
 
         if method not in scaler_factories:
-            logger.warning(
-                f"Unknown normalization method: {method}, using standard"
-            )
+            logger.warning(f"Unknown normalization method: {method}, using standard")
             method = "standard"
             scaler_key = "standard_scaler"
 
@@ -225,27 +213,21 @@ class FeaturePreprocessor:
 
         try:
             features_norm = features.copy()
-            numeric_cols = features_norm.select_dtypes(
-                include=[np.number]
-            ).columns
+            numeric_cols = features_norm.select_dtypes(include=[np.number]).columns
 
             if len(numeric_cols) == 0:
                 logger.warning("No numeric columns found for normalization")
                 return features_norm
 
             # Get or create scaler
-            scaler_key, scaler = self._get_or_create_scaler(
-                method, fit, **kwargs
-            )
+            scaler_key, scaler = self._get_or_create_scaler(method, fit, **kwargs)
 
             # Fit scaler if needed
             if fit:
                 scaler.fit(features_norm[numeric_cols])
 
             # Apply normalization
-            features_norm[numeric_cols] = scaler.transform(
-                features_norm[numeric_cols]
-            )
+            features_norm[numeric_cols] = scaler.transform(features_norm[numeric_cols])
             logger.debug(
                 f"Applied {method} normalization to {len(numeric_cols)} columns"
             )
@@ -274,9 +256,7 @@ class FeaturePreprocessor:
 
         try:
             features_clean = features.copy()
-            numeric_cols = features_clean.select_dtypes(
-                include=[np.number]
-            ).columns
+            numeric_cols = features_clean.select_dtypes(include=[np.number]).columns
 
             if len(numeric_cols) == 0:
                 return features_clean
@@ -329,8 +309,7 @@ class FeaturePreprocessor:
                         contamination=contamination, random_state=42
                     )
                     outliers = (
-                        iso_forest.fit_predict(features_clean[numeric_cols])
-                        == -1
+                        iso_forest.fit_predict(features_clean[numeric_cols]) == -1
                     )
 
                     features_clean.loc[outliers] = np.nan
@@ -339,12 +318,8 @@ class FeaturePreprocessor:
                     )
 
                 except ImportError:
-                    logger.warning(
-                        "sklearn not available, falling back to IQR method"
-                    )
-                    return self.remove_outliers(
-                        features, method="iqr", **kwargs
-                    )
+                    logger.warning("sklearn not available, falling back to IQR method")
+                    return self.remove_outliers(features, method="iqr", **kwargs)
 
                     from sklearn.ensemble import IsolationForest
 
@@ -354,8 +329,7 @@ class FeaturePreprocessor:
                         contamination=contamination, random_state=42
                     )
                     outliers = (
-                        iso_forest.fit_predict(features_clean[numeric_cols])
-                        == -1
+                        iso_forest.fit_predict(features_clean[numeric_cols]) == -1
                     )
 
                     features_clean.loc[outliers] = np.nan
@@ -364,17 +338,11 @@ class FeaturePreprocessor:
                     )
 
                 except ImportError:
-                    logger.warning(
-                        "sklearn not available, falling back to IQR method"
-                    )
-                    return self.remove_outliers(
-                        features, method="iqr", **kwargs
-                    )
+                    logger.warning("sklearn not available, falling back to IQR method")
+                    return self.remove_outliers(features, method="iqr", **kwargs)
 
             else:
-                logger.warning(
-                    f"Unknown outlier removal method: {method}, using IQR"
-                )
+                logger.warning(f"Unknown outlier removal method: {method}, using IQR")
                 return self.remove_outliers(features, method="iqr", **kwargs)
 
             # Handle NaN values created by outlier removal
@@ -409,17 +377,11 @@ class FeaturePreprocessor:
 
         try:
             features_clipped = features.copy()
-            numeric_cols = features_clipped.select_dtypes(
-                include=[np.number]
-            ).columns
+            numeric_cols = features_clipped.select_dtypes(include=[np.number]).columns
 
             for col in numeric_cols:
-                lower_bound = features_clipped[col].quantile(
-                    lower_percentile / 100
-                )
-                upper_bound = features_clipped[col].quantile(
-                    upper_percentile / 100
-                )
+                lower_bound = features_clipped[col].quantile(lower_percentile / 100)
+                upper_bound = features_clipped[col].quantile(upper_percentile / 100)
 
                 features_clipped[col] = features_clipped[col].clip(
                     lower=lower_bound, upper=upper_bound

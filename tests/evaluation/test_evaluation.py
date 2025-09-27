@@ -67,41 +67,31 @@ class TestRegimeMetricsComprehensive:
 
         # Different labels
         shifted_labels = np.roll(true_labels, 1)
-        nmi_shifted = metrics.normalized_mutual_info(
-            true_labels, shifted_labels
-        )
+        nmi_shifted = metrics.normalized_mutual_info(true_labels, shifted_labels)
         assert 0 <= nmi_shifted <= 1
 
     def test_silhouette_coefficient(self, sample_features, sample_predictions):
         """Test silhouette score calculation."""
         metrics = RegimeMetrics()
 
-        score = metrics.silhouette_coefficient(
-            sample_features, sample_predictions
-        )
+        score = metrics.silhouette_coefficient(sample_features, sample_predictions)
         assert -1 <= score <= 1
 
         # Single cluster edge case
         single_cluster = np.zeros(100, dtype=int)
-        score_single = metrics.silhouette_coefficient(
-            sample_features, single_cluster
-        )
+        score_single = metrics.silhouette_coefficient(sample_features, single_cluster)
         assert score_single == 0
 
     def test_davies_bouldin_index(self, sample_features, sample_predictions):
         """Test Davies-Bouldin index."""
         metrics = RegimeMetrics()
 
-        db_index = metrics.davies_bouldin_index(
-            sample_features, sample_predictions
-        )
+        db_index = metrics.davies_bouldin_index(sample_features, sample_predictions)
         assert db_index >= 0
 
         # Single cluster edge case
         single_cluster = np.zeros(100, dtype=int)
-        db_single = metrics.davies_bouldin_index(
-            sample_features, single_cluster
-        )
+        db_single = metrics.davies_bouldin_index(sample_features, single_cluster)
         assert db_single == np.inf
 
     def test_regime_stability(self, sample_predictions):
@@ -229,9 +219,7 @@ class TestModelEvaluatorComprehensive:
         evaluator = ModelEvaluator(sample_model)
 
         true_regimes = np.random.randint(0, 3, size=100)
-        results = evaluator.evaluate_model(
-            sample_features, true_regimes=true_regimes
-        )
+        results = evaluator.evaluate_model(sample_features, true_regimes=true_regimes)
 
         assert "supervised_metrics" in results
         assert "adjusted_rand_index" in results["supervised_metrics"]

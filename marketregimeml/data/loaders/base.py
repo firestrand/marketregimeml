@@ -37,7 +37,6 @@ class MarketDataLoader(ABC):
         Raises:
             ValueError: If configuration is invalid
         """
-        pass
 
     def fetch_ohlcv(
         self,
@@ -69,14 +68,10 @@ class MarketDataLoader(ABC):
         end_date = self._parse_date(end_date) if end_date else None
 
         # Validate parameters
-        self._validate_fetch_params(
-            symbol, timeframe, start_date, end_date, limit
-        )
+        self._validate_fetch_params(symbol, timeframe, start_date, end_date, limit)
 
         # Call implementation-specific method
-        df = self._fetch_ohlcv_impl(
-            symbol, timeframe, start_date, end_date, limit
-        )
+        df = self._fetch_ohlcv_impl(symbol, timeframe, start_date, end_date, limit)
 
         # Common postprocessing
         if not self.validate_ohlcv(df):
@@ -98,7 +93,6 @@ class MarketDataLoader(ABC):
 
         Subclasses implement this with their specific API calls.
         """
-        pass
 
     def _parse_date(self, date_input: Union[str, datetime]) -> datetime:
         """Parse date input to datetime."""
@@ -170,7 +164,6 @@ class MarketDataLoader(ABC):
         Returns:
             List of available symbol strings
         """
-        pass
 
     @abstractmethod
     def get_available_timeframes(self) -> List[str]:
@@ -179,7 +172,6 @@ class MarketDataLoader(ABC):
         Returns:
             List of available timeframe strings
         """
-        pass
 
     def validate_symbol(self, symbol: str) -> bool:
         """Validate if symbol is available.
@@ -240,9 +232,7 @@ class MarketDataLoader(ABC):
         # Use shared validation utility
         return OHLCVValidator.validate(df)
 
-    def resample_ohlcv(
-        self, df: pd.DataFrame, target_timeframe: str
-    ) -> pd.DataFrame:
+    def resample_ohlcv(self, df: pd.DataFrame, target_timeframe: str) -> pd.DataFrame:
         """Resample OHLCV data to different timeframe.
 
         Args:

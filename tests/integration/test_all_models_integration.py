@@ -199,9 +199,7 @@ class TestAllModelsIntegration:
             ("hmm", HMMRegimeDetector(n_regimes=3)),
             ("gmm", GMMRegimeDetector(n_regimes=3)),
         ]
-        model = EnsembleRegimeDetector(
-            models=named_models, voting="soft", n_regimes=3
-        )
+        model = EnsembleRegimeDetector(models=named_models, voting="soft", n_regimes=3)
         model.fit(sample_data)
         predictions = model.predict(sample_data)
         assert len(predictions) == len(sample_data)
@@ -288,17 +286,13 @@ class TestAllModelsIntegration:
         assert all(0 <= r <= 100 for r in rsi.dropna())
 
         # Test MACD
-        macd_line, signal, histogram = tech_indicators.macd(
-            ohlcv_data["close"]
-        )
+        macd_line, signal, histogram = tech_indicators.macd(ohlcv_data["close"])
         assert len(macd_line) == len(ohlcv_data)
         assert len(signal) == len(ohlcv_data)
         assert len(histogram) == len(ohlcv_data)
 
         # Test Bollinger Bands
-        upper, middle, lower = tech_indicators.bollinger_bands(
-            ohlcv_data["close"]
-        )
+        upper, middle, lower = tech_indicators.bollinger_bands(ohlcv_data["close"])
         assert len(upper) == len(ohlcv_data)
         assert len(middle) == len(ohlcv_data)
         assert len(lower) == len(ohlcv_data)

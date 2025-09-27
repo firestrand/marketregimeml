@@ -32,7 +32,6 @@ class IRegimeDetector(ABC):
         self
             Fitted model instance
         """
-        pass
 
     @abstractmethod
     def predict(self, features: pd.DataFrame) -> np.ndarray:
@@ -48,7 +47,6 @@ class IRegimeDetector(ABC):
         np.ndarray
             Regime labels
         """
-        pass
 
     @abstractmethod
     def predict_proba(self, features: pd.DataFrame) -> np.ndarray:
@@ -64,7 +62,6 @@ class IRegimeDetector(ABC):
         np.ndarray
             Regime probabilities
         """
-        pass
 
 
 class IOptimizable(ABC):
@@ -96,7 +93,6 @@ class IOptimizable(ABC):
         int
             Optimal number of regimes
         """
-        pass
 
     @abstractmethod
     def get_optimization_scores(self) -> Dict[int, float]:
@@ -107,7 +103,6 @@ class IOptimizable(ABC):
         Dict[int, float]
             Mapping of regime count to optimization score
         """
-        pass
 
 
 class IPersistable(ABC):
@@ -122,7 +117,6 @@ class IPersistable(ABC):
         filepath : str
             Path to save the model
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -139,7 +133,6 @@ class IPersistable(ABC):
         IPersistable
             Loaded model instance
         """
-        pass
 
 
 class IStatistical(ABC):
@@ -163,12 +156,9 @@ class IStatistical(ABC):
         Dict[int, Dict[str, Any]]
             Statistics per regime
         """
-        pass
 
     @abstractmethod
-    def get_transition_matrix(
-        self, regimes: Optional[np.ndarray] = None
-    ) -> np.ndarray:
+    def get_transition_matrix(self, regimes: Optional[np.ndarray] = None) -> np.ndarray:
         """Get regime transition matrix.
 
         Parameters
@@ -181,7 +171,6 @@ class IStatistical(ABC):
         np.ndarray
             Transition matrix
         """
-        pass
 
 
 class IScorable(ABC):
@@ -210,7 +199,6 @@ class IScorable(ABC):
         float
             Score value
         """
-        pass
 
     @abstractmethod
     def _compute_log_likelihood(self, features: pd.DataFrame) -> float:
@@ -226,7 +214,6 @@ class IScorable(ABC):
         float
             Log-likelihood value
         """
-        pass
 
     @abstractmethod
     def _compute_aic(self, features: pd.DataFrame) -> float:
@@ -242,7 +229,6 @@ class IScorable(ABC):
         float
             AIC value
         """
-        pass
 
     @abstractmethod
     def _compute_bic(self, features: pd.DataFrame) -> float:
@@ -258,7 +244,6 @@ class IScorable(ABC):
         float
             BIC value
         """
-        pass
 
 
 class ICrossValidatable(ABC):
@@ -287,7 +272,6 @@ class ICrossValidatable(ABC):
         Dict[str, np.ndarray]
             Cross-validation results
         """
-        pass
 
 
 class IConfidenceBased(ABC):
@@ -307,7 +291,6 @@ class IConfidenceBased(ABC):
         pd.DataFrame
             Confidence scores
         """
-        pass
 
     @abstractmethod
     def get_prediction_uncertainty(self, features: pd.DataFrame) -> np.ndarray:
@@ -323,7 +306,6 @@ class IConfidenceBased(ABC):
         np.ndarray
             Uncertainty scores
         """
-        pass
 
 
 class IEnsemble(ABC):
@@ -340,7 +322,6 @@ class IEnsemble(ABC):
         weight : float
             Model weight
         """
-        pass
 
     @abstractmethod
     def get_model_weights(self) -> np.ndarray:
@@ -351,7 +332,6 @@ class IEnsemble(ABC):
         np.ndarray
             Model weights
         """
-        pass
 
     @abstractmethod
     def get_model_predictions(self, features: pd.DataFrame) -> Dict[str, np.ndarray]:
@@ -367,4 +347,3 @@ class IEnsemble(ABC):
         Dict[str, np.ndarray]
             Predictions from each model
         """
-        pass

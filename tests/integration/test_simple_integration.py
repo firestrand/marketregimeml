@@ -184,9 +184,7 @@ class TestSimpleIntegration:
         assert isinstance(info, dict)
 
         # Test feature selection
-        selected = engine.select_features(
-            features, method="variance", threshold=0.01
-        )
+        selected = engine.select_features(features, method="variance", threshold=0.01)
         assert len(selected.columns) <= len(features.columns)
 
         # Test feature scaling
@@ -202,9 +200,7 @@ class TestSimpleIntegration:
         model = GMMRegimeDetector(n_regimes=3)
 
         # Create simple data
-        data = pd.DataFrame(
-            {"f1": np.random.randn(100), "f2": np.random.randn(100)}
-        )
+        data = pd.DataFrame({"f1": np.random.randn(100), "f2": np.random.randn(100)})
 
         model.fit(data)
 
@@ -257,9 +253,7 @@ class TestSimpleIntegration:
         from marketregimeml.models.ml import RandomForestRegimeClassifier
 
         # Create data
-        X = pd.DataFrame(
-            {"f1": np.random.randn(100), "f2": np.random.randn(100)}
-        )
+        X = pd.DataFrame({"f1": np.random.randn(100), "f2": np.random.randn(100)})
         y = np.random.choice([0, 1, 2], size=100)
 
         model = RandomForestRegimeClassifier(

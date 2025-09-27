@@ -36,4 +36,3 @@ def test_duckdb_store_write_read(tmp_path):
     store.write_ohlcv(df.iloc[-2:], symbol="EUR_USD", timeframe="M5")
     out2 = store.read_ohlcv("EUR_USD", "M5")
     assert len(out2) == 3  # no duplicates
-

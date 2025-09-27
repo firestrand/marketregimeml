@@ -85,15 +85,13 @@ class ModelEvaluator:
         )
 
         # Temporal consistency
-        results["temporal_metrics"] = (
-            self.regime_metrics.temporal_consistency_metrics(predictions)
+        results["temporal_metrics"] = self.regime_metrics.temporal_consistency_metrics(
+            predictions
         )
 
         # Regime Quality Index
-        results["regime_quality_index"] = (
-            self.regime_metrics.regime_quality_index(
-                features.values, predictions, probabilities
-            )
+        results["regime_quality_index"] = self.regime_metrics.regime_quality_index(
+            features.values, predictions, probabilities
         )
 
         self.evaluation_results = results
@@ -145,9 +143,7 @@ class ModelEvaluator:
         regime_stats = {}
 
         # Get regime stability metrics
-        regime_stats["stability"] = self.regime_metrics.regime_stability(
-            predictions
-        )
+        regime_stats["stability"] = self.regime_metrics.regime_stability(predictions)
 
         # Get regime distribution
         regime_stats["distribution"] = self.regime_metrics.regime_distribution(
@@ -293,24 +289,18 @@ class ModelEvaluator:
             flat_results = {
                 "model_type": model.__class__.__name__,
                 "n_regimes": model.n_regimes,
-                "silhouette_score": results["clustering_metrics"][
-                    "silhouette_score"
-                ],
+                "silhouette_score": results["clustering_metrics"]["silhouette_score"],
                 "davies_bouldin_index": results["clustering_metrics"][
                     "davies_bouldin_index"
                 ],
                 "calinski_harabasz_index": results["clustering_metrics"][
                     "calinski_harabasz_index"
                 ],
-                "avg_confidence": results["clustering_metrics"][
-                    "avg_confidence"
-                ],
+                "avg_confidence": results["clustering_metrics"]["avg_confidence"],
                 "transition_rate": results["regime_analysis"]["stability"][
                     "transition_rate"
                 ],
-                "avg_duration": results["regime_analysis"]["stability"][
-                    "avg_duration"
-                ],
+                "avg_duration": results["regime_analysis"]["stability"]["avg_duration"],
                 "regime_quality_index": results["regime_quality_index"],
             }
 

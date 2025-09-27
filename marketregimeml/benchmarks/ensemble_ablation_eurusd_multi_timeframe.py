@@ -22,7 +22,9 @@ def _prep(df: pd.DataFrame) -> pd.DataFrame:
     return RealDataLoader()._prepare_features(df)
 
 
-def run_eurusd_multi_tf_ablation(n_regimes: int = 3, seeds: List[int] | None = None) -> Dict[str, Dict]:
+def run_eurusd_multi_tf_ablation(
+    n_regimes: int = 3, seeds: List[int] | None = None
+) -> Dict[str, Dict]:
     if seeds is None:
         seeds = [0, 1]
 
@@ -34,7 +36,9 @@ def run_eurusd_multi_tf_ablation(n_regimes: int = 3, seeds: List[int] | None = N
     if m5 is not None and not m5.empty:
         datasets["EUR/USD (M5)"] = _prep(m5)
     else:
-        print("No EUR/USD M5 found in DuckDB. Please run scripts/fetch_oanda_intraday.py EUR_USD M5 <days> first.")
+        print(
+            "No EUR/USD M5 found in DuckDB. Please run scripts/fetch_oanda_intraday.py EUR_USD M5 <days> first."
+        )
 
     # Aggregated timeframes from M5
     for tf in ["M15", "M30", "H1"]:
@@ -66,4 +70,3 @@ def run_eurusd_multi_tf_ablation(n_regimes: int = 3, seeds: List[int] | None = N
 
 if __name__ == "__main__":
     run_eurusd_multi_tf_ablation()
-

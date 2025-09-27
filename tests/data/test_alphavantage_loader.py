@@ -107,9 +107,7 @@ class TestAlphaVantageLoader:
         assert loader.rate_limit_period == 60
 
     @patch("requests.get")
-    def test_fetch_daily_ohlcv(
-        self, mock_get, mock_env_vars, mock_av_response
-    ):
+    def test_fetch_daily_ohlcv(self, mock_get, mock_env_vars, mock_av_response):
         """Test fetching daily OHLCV data."""
         # Setup mock response
         mock_response = Mock()
@@ -131,8 +129,7 @@ class TestAlphaVantageLoader:
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 3
         assert all(
-            col in df.columns
-            for col in ["open", "high", "low", "close", "volume"]
+            col in df.columns for col in ["open", "high", "low", "close", "volume"]
         )
 
         # Check data values
@@ -218,9 +215,7 @@ class TestAlphaVantageLoader:
             loader.fetch_ohlcv("INVALID", "1d", "2023-01-01")
 
     @patch("requests.get")
-    def test_fetch_multiple_symbols(
-        self, mock_get, mock_env_vars, mock_av_response
-    ):
+    def test_fetch_multiple_symbols(self, mock_get, mock_env_vars, mock_av_response):
         """Test fetching data for multiple symbols."""
         # Setup mock response
         mock_response = Mock()
@@ -277,15 +272,9 @@ class TestAlphaVantageLoader:
         # Test conversions - these return the standardized format, not Alpha Vantage format
         assert loader._convert_timeframe("1min") == "1min"
         assert loader._convert_timeframe("5min") == "5min"
-        assert (
-            loader._convert_timeframe("1d") == "1d"
-        )  # Returns standardized format
-        assert (
-            loader._convert_timeframe("1w") == "1w"
-        )  # Returns standardized format
-        assert (
-            loader._convert_timeframe("1m") == "1m"
-        )  # Returns standardized format
+        assert loader._convert_timeframe("1d") == "1d"  # Returns standardized format
+        assert loader._convert_timeframe("1w") == "1w"  # Returns standardized format
+        assert loader._convert_timeframe("1m") == "1m"  # Returns standardized format
         assert loader._convert_timeframe("daily") == "daily"
         assert loader._convert_timeframe("weekly") == "weekly"
         assert loader._convert_timeframe("monthly") == "monthly"

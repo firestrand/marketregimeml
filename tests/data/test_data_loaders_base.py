@@ -48,9 +48,7 @@ class MockDataLoader(MarketDataLoader):
     ) -> dict:
         """Mock fetch_multiple."""
         return {
-            symbol: self.fetch_ohlcv(
-                symbol, timeframe, start_date, end_date, limit
-            )
+            symbol: self.fetch_ohlcv(symbol, timeframe, start_date, end_date, limit)
             for symbol in symbols
         }
 

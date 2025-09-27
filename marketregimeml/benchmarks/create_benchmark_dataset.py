@@ -93,9 +93,7 @@ class BenchmarkDataset:
                     },
                 }
 
-                logger.info(
-                    f"Successfully processed {pair}: {len(ohlcv)} samples"
-                )
+                logger.info(f"Successfully processed {pair}: {len(ohlcv)} samples")
 
             except Exception as e:
                 logger.error(f"Failed to process {pair}: {e}")
@@ -238,17 +236,14 @@ class BenchmarkDataset:
                             "pair": pair,
                             "expected_regime": (
                                 "volatile"
-                                if "covid" in period_name
-                                or "brexit" in period_name
+                                if "covid" in period_name or "brexit" in period_name
                                 else "normal"
                             ),
                         },
                     }
 
                 except Exception as e:
-                    logger.error(
-                        f"Failed to process {pair} for {period_name}: {e}"
-                    )
+                    logger.error(f"Failed to process {pair} for {period_name}: {e}")
 
             benchmark_data[period_name] = period_data
 

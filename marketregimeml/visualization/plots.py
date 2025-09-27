@@ -74,9 +74,7 @@ class RegimePlotter:
         # Add regime coloring
         for i in range(len(prices)):
             if i > 0:
-                regime = (
-                    regimes[i - 1] if i - 1 < len(regimes) else regimes[-1]
-                )
+                regime = regimes[i - 1] if i - 1 < len(regimes) else regimes[-1]
                 ax1.axvspan(
                     prices.index[i - 1],
                     prices.index[i],
@@ -180,9 +178,7 @@ class RegimePlotter:
         n_regimes = transition_matrix.shape[0]
 
         # Create heatmap
-        im = ax.imshow(
-            transition_matrix, cmap="YlOrRd", aspect="auto", vmin=0, vmax=1
-        )
+        im = ax.imshow(transition_matrix, cmap="YlOrRd", aspect="auto", vmin=0, vmax=1)
 
         # Add colorbar
         plt.colorbar(im, ax=ax, label="Probability")
@@ -232,9 +228,7 @@ class RegimePlotter:
         Returns:
             Matplotlib figure
         """
-        fig, axes = plt.subplots(
-            1, len(durations), figsize=(5 * len(durations), 4)
-        )
+        fig, axes = plt.subplots(1, len(durations), figsize=(5 * len(durations), 4))
 
         if len(durations) == 1:
             axes = [axes]
@@ -450,9 +444,7 @@ def plot_regime_probabilities(
         Matplotlib figure
     """
     if dates is None:
-        dates = pd.date_range(
-            "2020-01-01", periods=len(probabilities), freq="D"
-        )
+        dates = pd.date_range("2020-01-01", periods=len(probabilities), freq="D")
 
     plotter = RegimePlotter(**kwargs)
     return plotter.plot_probabilities(probabilities, dates)
@@ -527,9 +519,7 @@ def plot_regime_duration_distribution(regimes: np.ndarray, **kwargs) -> Figure:
     return plotter.plot_duration_distribution(durations)
 
 
-def plot_transition_matrix_heatmap(
-    transition_matrix: np.ndarray, **kwargs
-) -> Figure:
+def plot_transition_matrix_heatmap(transition_matrix: np.ndarray, **kwargs) -> Figure:
     """Plot transition matrix heatmap.
 
     Args:
@@ -543,9 +533,7 @@ def plot_transition_matrix_heatmap(
     return plotter.plot_transitions(transition_matrix)
 
 
-def plot_feature_importance(
-    importances: Union[pd.Series, Dict], **kwargs
-) -> Figure:
+def plot_feature_importance(importances: Union[pd.Series, Dict], **kwargs) -> Figure:
     """Plot feature importances.
 
     Args:
@@ -559,9 +547,7 @@ def plot_feature_importance(
     return plotter.plot_feature_importance(importances)
 
 
-def plot_model_comparison(
-    metrics: Union[pd.DataFrame, Dict], **kwargs
-) -> Figure:
+def plot_model_comparison(metrics: Union[pd.DataFrame, Dict], **kwargs) -> Figure:
     """Plot model comparison.
 
     Args:
@@ -575,9 +561,7 @@ def plot_model_comparison(
     return plotter.plot_model_comparison(metrics)
 
 
-def plot_regime_returns(
-    returns: pd.Series, regimes: np.ndarray, **kwargs
-) -> Figure:
+def plot_regime_returns(returns: pd.Series, regimes: np.ndarray, **kwargs) -> Figure:
     """Plot returns by regime.
 
     Args:

@@ -107,14 +107,10 @@ class PersistenceHandler:
                 if not str(filepath).endswith(".gz"):
                     filepath = Path(str(filepath) + ".gz")
                 with gzip.open(filepath, "wb") as f:
-                    pickle.dump(
-                        model_data, f, protocol=pickle.HIGHEST_PROTOCOL
-                    )
+                    pickle.dump(model_data, f, protocol=pickle.HIGHEST_PROTOCOL)
             else:
                 with open(filepath, "wb") as f:
-                    pickle.dump(
-                        model_data, f, protocol=pickle.HIGHEST_PROTOCOL
-                    )
+                    pickle.dump(model_data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
         elif format == "joblib":
             joblib.dump(model_data, filepath, compress=3 if compress else 0)
@@ -122,9 +118,7 @@ class PersistenceHandler:
         elif format == "json":
             content = json.dumps(model_data, indent=2)
             if compress:
-                with gzip.open(
-                    str(filepath) + ".gz", "wt", encoding="utf-8"
-                ) as f:
+                with gzip.open(str(filepath) + ".gz", "wt", encoding="utf-8") as f:
                     f.write(content)
             else:
                 with open(filepath, "w") as f:
@@ -270,11 +264,7 @@ class BaseRegimeDetector(ABC):
     @property
     def fuzzy_matching(self) -> bool:
         """Get fuzzy matching enabled state."""
-        return (
-            self.fuzzy_config.enabled
-            if hasattr(self, "fuzzy_config")
-            else False
-        )
+        return self.fuzzy_config.enabled if hasattr(self, "fuzzy_config") else False
 
     @fuzzy_matching.setter
     def fuzzy_matching(self, value: bool) -> None:
@@ -285,11 +275,7 @@ class BaseRegimeDetector(ABC):
     @property
     def fuzzy_threshold(self) -> float:
         """Get fuzzy threshold."""
-        return (
-            self.fuzzy_config.threshold
-            if hasattr(self, "fuzzy_config")
-            else 0.7
-        )
+        return self.fuzzy_config.threshold if hasattr(self, "fuzzy_config") else 0.7
 
     @fuzzy_threshold.setter
     def fuzzy_threshold(self, value: float) -> None:
@@ -397,9 +383,7 @@ class BaseRegimeDetector(ABC):
     @property
     def feature_names(self) -> Optional[List[str]]:
         """Get feature names."""
-        return (
-            self.metadata.feature_names if hasattr(self, "metadata") else None
-        )
+        return self.metadata.feature_names if hasattr(self, "metadata") else None
 
     @feature_names.setter
     def feature_names(self, value: Optional[List[str]]) -> None:
@@ -410,11 +394,7 @@ class BaseRegimeDetector(ABC):
     @property
     def train_log_likelihood(self) -> Optional[float]:
         """Get training log likelihood."""
-        return (
-            self.metadata.train_log_likelihood
-            if hasattr(self, "metadata")
-            else None
-        )
+        return self.metadata.train_log_likelihood if hasattr(self, "metadata") else None
 
     @train_log_likelihood.setter
     def train_log_likelihood(self, value: Optional[float]) -> None:
@@ -458,9 +438,7 @@ class BaseRegimeDetector(ABC):
 
         # Recommend odd numbers for better regime separation
         if n_regimes > 2 and n_regimes % 2 == 0:
-            recommended = (
-                n_regimes + 1 if n_regimes < max_regimes else n_regimes - 1
-            )
+            recommended = n_regimes + 1 if n_regimes < max_regimes else n_regimes - 1
             logger.info(
                 f"Odd numbers recommended for regimes. Consider {recommended} instead of {n_regimes}"
             )
@@ -545,7 +523,6 @@ class BaseRegimeDetector(ABC):
         Returns:
             Self for method chaining
         """
-        pass
 
     @abstractmethod
     def predict(self, features: pd.DataFrame) -> np.ndarray:
@@ -557,7 +534,6 @@ class BaseRegimeDetector(ABC):
         Returns:
             Array of regime labels
         """
-        pass
 
     @abstractmethod
     def predict_proba(self, features: pd.DataFrame) -> np.ndarray:
@@ -569,7 +545,6 @@ class BaseRegimeDetector(ABC):
         Returns:
             Array of regime probabilities (n_samples, n_regimes)
         """
-        pass
 
     def fit_predict(self, features: pd.DataFrame, **kwargs) -> np.ndarray:
         """Fit model and return predictions.
@@ -584,9 +559,7 @@ class BaseRegimeDetector(ABC):
         self.fit(features, **kwargs)
         return self.predict(features)
 
-    def score(
-        self, features: pd.DataFrame, metric: str = "log_likelihood"
-    ) -> float:
+    def score(self, features: pd.DataFrame, metric: str = "log_likelihood") -> float:
         """Score the model on given features.
 
         Args:
@@ -618,7 +591,6 @@ class BaseRegimeDetector(ABC):
         Returns:
             Log-likelihood value
         """
-        pass
 
     def _compute_aic(self, features: pd.DataFrame) -> float:
         """Compute Akaike Information Criterion.
@@ -654,7 +626,6 @@ class BaseRegimeDetector(ABC):
         Returns:
             Number of parameters
         """
-        pass
 
     def get_regime_statistics(
         self, features: pd.DataFrame, regimes: Optional[np.ndarray] = None
@@ -683,9 +654,7 @@ class BaseRegimeDetector(ABC):
                 stats[regime] = {
                     "count": mask.sum(),
                     "percentage": mask.sum() / len(regimes) * 100,
-                    "mean_duration": self._calculate_mean_duration(
-                        regimes, regime
-                    ),
+                    "mean_duration": self._calculate_mean_duration(regimes, regime),
                 }
 
                 # Add feature statistics
@@ -695,9 +664,7 @@ class BaseRegimeDetector(ABC):
 
         return stats
 
-    def _calculate_mean_duration(
-        self, regimes: np.ndarray, regime: int
-    ) -> float:
+    def _calculate_mean_duration(self, regimes: np.ndarray, regime: int) -> float:
         """Calculate mean duration of a regime.
 
         Args:
@@ -853,9 +820,7 @@ class BaseRegimeDetector(ABC):
 
         if filepath.suffix == ".json":
             # JSON format (limited, mainly for metadata)
-            json_data = {
-                k: v for k, v in model_data.items() if k not in ["model"]
-            }
+            json_data = {k: v for k, v in model_data.items() if k not in ["model"]}
             with open(filepath, "w") as f:
                 json.dump(json_data, f, indent=2, default=str)
         else:
@@ -881,9 +846,7 @@ class BaseRegimeDetector(ABC):
             raise FileNotFoundError(f"Model file not found: {filepath}")
 
         if filepath.suffix == ".json":
-            raise ValueError(
-                "Cannot load full model from JSON. Use pickle format."
-            )
+            raise ValueError("Cannot load full model from JSON. Use pickle format.")
 
         with open(filepath, "rb") as f:
             model_data = pickle.load(f)
@@ -918,9 +881,7 @@ class BaseRegimeDetector(ABC):
             names: Dictionary mapping regime number to name
         """
         if len(names) != self.n_regimes:
-            raise ValueError(
-                f"Must provide names for all {self.n_regimes} regimes"
-            )
+            raise ValueError(f"Must provide names for all {self.n_regimes} regimes")
         self.regime_names = names
         logger.info(f"Updated regime names: {names}")
 
@@ -980,9 +941,7 @@ class BaseRegimeDetector(ABC):
             else:
                 # Low confidence: use fuzzy assignment
                 # Normalize probabilities above a minimum threshold
-                min_threshold = (
-                    1.0 / n_regimes * 0.5
-                )  # Half of uniform probability
+                min_threshold = 1.0 / n_regimes * 0.5  # Half of uniform probability
                 relevant_probs = np.where(probs >= min_threshold, probs, 0)
 
                 if np.sum(relevant_probs) > 0:
@@ -1002,9 +961,7 @@ class BaseRegimeDetector(ABC):
             "probabilities": probabilities,
         }
 
-    def analyze_regime_transitions(
-        self, regimes: np.ndarray
-    ) -> Dict[str, Any]:
+    def analyze_regime_transitions(self, regimes: np.ndarray) -> Dict[str, Any]:
         """Analyze regime transition patterns.
 
         Args:
@@ -1035,9 +992,7 @@ class BaseRegimeDetector(ABC):
         regime_durations = self._calculate_regime_durations(regimes)
 
         # Stability metrics
-        persistence = np.diag(
-            transition_probs
-        )  # Probability of staying in same regime
+        persistence = np.diag(transition_probs)  # Probability of staying in same regime
         volatility = 1 - persistence  # Regime change probability
 
         return {
@@ -1051,9 +1006,7 @@ class BaseRegimeDetector(ABC):
             "n_transitions": len(regimes) - 1,
         }
 
-    def _calculate_regime_durations(
-        self, regimes: np.ndarray
-    ) -> Dict[int, float]:
+    def _calculate_regime_durations(self, regimes: np.ndarray) -> Dict[int, float]:
         """Calculate average duration for each regime.
 
         Args:
@@ -1167,7 +1120,10 @@ class BaseRegimeDetector(ABC):
         return self.__class__(**init_params)
 
     def optimize_regime_count(
-        self, features: pd.DataFrame, criteria: str = "aic", *,
+        self,
+        features: pd.DataFrame,
+        criteria: str = "aic",
+        *,
         min_silhouette: float = 0.0,
         min_cluster_prop: float = 0.0,
     ) -> Dict[str, Any]:
@@ -1223,12 +1179,18 @@ class BaseRegimeDetector(ABC):
             counts = np.bincount(preds)
             return float(counts.min() / len(preds)) if len(counts) else 0.0
 
-        if criteria in ("aic", "bic") and (min_silhouette > 0.0 or min_cluster_prop > 0.0):
+        if criteria in ("aic", "bic") and (
+            min_silhouette > 0.0 or min_cluster_prop > 0.0
+        ):
             try:
                 # Evaluate silhouette for chosen and all tried models; fallback to best passing guardrails
                 sil_scores: Dict[int, float] = {}
                 passing: Dict[int, float] = {}
-                X = features.values if hasattr(features, "values") else np.asarray(features)
+                X = (
+                    features.values
+                    if hasattr(features, "values")
+                    else np.asarray(features)
+                )
                 for n, m in models.items():
                     preds = m.predict(features)
                     if len(np.unique(preds)) < 2:
@@ -1282,14 +1244,10 @@ class BaseRegimeDetector(ABC):
             "n_regimes": self.n_regimes,
             "random_state": self.random_state,
             "fuzzy_matching": (
-                self.fuzzy_config.enabled
-                if hasattr(self, "fuzzy_config")
-                else False
+                self.fuzzy_config.enabled if hasattr(self, "fuzzy_config") else False
             ),
             "fuzzy_threshold": (
-                self.fuzzy_config.threshold
-                if hasattr(self, "fuzzy_config")
-                else 0.7
+                self.fuzzy_config.threshold if hasattr(self, "fuzzy_config") else 0.7
             ),
             "auto_optimize_regimes": (
                 self.optimization_config.auto_optimize
@@ -1390,16 +1348,12 @@ class BaseRegimeDetector(ABC):
 
         # Delegate to PersistenceHandler
         try:
-            PersistenceHandler.save(
-                model_data, Path(filepath), format, compress
-            )
+            PersistenceHandler.save(model_data, Path(filepath), format, compress)
         except Exception as e:
             raise OSError(f"Failed to save model: {e}")
 
     @classmethod
-    def _restore_model_from_data(
-        cls, model_data: Dict
-    ) -> "BaseRegimeDetector":
+    def _restore_model_from_data(cls, model_data: Dict) -> "BaseRegimeDetector":
         """Restore model instance from loaded data.
 
         Args:
@@ -1410,9 +1364,7 @@ class BaseRegimeDetector(ABC):
         """
         # Handle backward compatibility
         if "model_class" not in model_data:
-            logger.warning(
-                "Loading model in old format, attempting migration..."
-            )
+            logger.warning("Loading model in old format, attempting migration...")
             model_data = cls._migrate_old_format(model_data)
 
         # Verify class matches
@@ -1465,9 +1417,7 @@ class BaseRegimeDetector(ABC):
             model_data = PersistenceHandler.load(Path(filepath), format)
 
             # Convert JSON data if needed
-            if format == "json" or (
-                format is None and (".json" in str(filepath))
-            ):
+            if format == "json" or (format is None and (".json" in str(filepath))):
                 model_data = cls._restore_json_data(model_data)
 
             # Restore model from data

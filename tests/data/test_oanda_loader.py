@@ -56,17 +56,13 @@ class TestOANDADataLoader:
     @pytest.fixture
     def loader(self, mock_env_vars):
         """Create OANDA loader instance with mocked environment."""
-        with patch(
-            "marketregimeml.data.loaders.oanda.v20.Context"
-        ) as mock_context:
+        with patch("marketregimeml.data.loaders.oanda.v20.Context") as mock_context:
             mock_context.return_value = MagicMock()
             return OANDADataLoader()
 
     def test_init_with_credentials(self, mock_env_vars):
         """Test initialization with credentials from environment."""
-        with patch(
-            "marketregimeml.data.loaders.oanda.v20.Context"
-        ) as mock_context:
+        with patch("marketregimeml.data.loaders.oanda.v20.Context") as mock_context:
             loader = OANDADataLoader()
 
             assert loader.api_key == "test_api_key"
@@ -139,18 +135,14 @@ class TestOANDADataLoader:
         assert loader._convert_timeframe("5min") == "M5"
         assert loader._convert_timeframe("1h") == "H1"
         assert loader._convert_timeframe("1d") == "D"
-        assert (
-            loader._convert_timeframe("M15") == "M15"
-        )  # Already OANDA format
+        assert loader._convert_timeframe("M15") == "M15"  # Already OANDA format
 
     def test_fetch_ohlcv_success(self, loader, mock_oanda_response):
         """Test successful OHLCV data fetch."""
         mock_response = MagicMock()
         mock_response.body = mock_oanda_response
 
-        with patch.object(
-            loader.api.instrument, "candles", return_value=mock_response
-        ):
+        with patch.object(loader.api.instrument, "candles", return_value=mock_response):
             df = loader.fetch_ohlcv(
                 symbol="EUR_USD",
                 timeframe="H1",
@@ -208,9 +200,7 @@ class TestOANDADataLoader:
         mock_response = MagicMock()
         mock_response.body = mock_oanda_response
 
-        with patch.object(
-            loader.api.instrument, "candles", return_value=mock_response
-        ):
+        with patch.object(loader.api.instrument, "candles", return_value=mock_response):
             symbols = ["EUR_USD", "GBP_USD"]
             data = loader.fetch_multiple(
                 symbols=symbols,
@@ -247,9 +237,7 @@ class TestOANDADataLoader:
         mock_response = MagicMock()
         mock_response.body = mock_oanda_response
 
-        with patch.object(
-            loader.api.instrument, "candles", return_value=mock_response
-        ):
+        with patch.object(loader.api.instrument, "candles", return_value=mock_response):
             with patch("time.sleep") as mock_sleep:
                 # Make multiple rapid requests
                 for _ in range(3):
@@ -321,19 +309,12 @@ class TestOANDADataLoader:
         monkeypatch.setenv("OANDA_API_KEY", "test_key")
         monkeypatch.setenv("OANDA_ACCOUNT_ID", "test_account")
 
-        with patch(
-            "marketregimeml.data.loaders.oanda.v20.Context"
-        ):
+        with patch("marketregimeml.data.loaders.oanda.v20.Context"):
             loader = OANDADataLoader()
-            assert (
-                "practice" in loader.hostname
-                or loader.environment == "practice"
-            )
+            assert "practice" in loader.hostname or loader.environment == "practice"
 
         # Test live environment
         monkeypatch.setenv("OANDA_ENVIRONMENT", "live")
-        with patch(
-            "marketregimeml.data.loaders.oanda.v20.Context"
-        ):
+        with patch("marketregimeml.data.loaders.oanda.v20.Context"):
             loader = OANDADataLoader()
             assert "live" in loader.hostname or loader.environment == "live"

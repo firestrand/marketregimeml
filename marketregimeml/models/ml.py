@@ -143,9 +143,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
         # If no labels provided, use clustering
         if y is None:
             logger.info("No labels provided, using KMeans clustering")
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             self.cluster_labels_ = kmeans.fit_predict(X_scaled)
             y = self.cluster_labels_
 
@@ -218,9 +216,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
         X_scaled = self.scaler_.transform(X)
         return self.model_.predict_proba(X_scaled)
 
-    def get_feature_importance(
-        self, normalize: bool = True
-    ) -> Dict[str, float]:
+    def get_feature_importance(self, normalize: bool = True) -> Dict[str, float]:
         """Get feature importance scores.
 
         Parameters
@@ -270,9 +266,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
         """
         if y is None:
             # Use clustering for labels
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(features)
 
         # Initialize scaler if not already done
@@ -335,9 +329,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
             Best parameters found
         """
         if y is None:
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(features)
 
         if param_grid is None:
@@ -354,9 +346,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
 
         X_scaled = self.scaler_.fit_transform(features)
 
-        base_model = RandomForestClassifier(
-            random_state=self.random_state, n_jobs=-1
-        )
+        base_model = RandomForestClassifier(random_state=self.random_state, n_jobs=-1)
 
         tscv = TimeSeriesSplit(n_splits=cv)
 
@@ -371,9 +361,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
         self.n_estimators = grid_search.best_params_.get(
             "n_estimators", self.n_estimators
         )
-        self.max_depth = grid_search.best_params_.get(
-            "max_depth", self.max_depth
-        )
+        self.max_depth = grid_search.best_params_.get("max_depth", self.max_depth)
         self.min_samples_split = grid_search.best_params_.get(
             "min_samples_split", self.min_samples_split
         )
@@ -449,9 +437,7 @@ class RandomForestRegimeClassifier(BaseRegimeDetector):
         logger.info(f"Model saved to {filepath}")
 
     @classmethod
-    def load(
-        cls, filepath: Union[str, Path]
-    ) -> "RandomForestRegimeClassifier":
+    def load(cls, filepath: Union[str, Path]) -> "RandomForestRegimeClassifier":
         """Load model from file.
 
         Parameters
@@ -572,9 +558,7 @@ class XGBoostRegimeClassifier(BaseRegimeDetector):
         X_scaled = self.scaler_.fit_transform(X)
 
         if y is None:
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(X_scaled)
 
         # Prepare parameters
@@ -599,9 +583,7 @@ class XGBoostRegimeClassifier(BaseRegimeDetector):
         if early_stopping_rounds is not None:
             params["early_stopping_rounds"] = early_stopping_rounds
             params["callbacks"] = [
-                xgb.callback.EarlyStopping(
-                    rounds=early_stopping_rounds, save_best=True
-                )
+                xgb.callback.EarlyStopping(rounds=early_stopping_rounds, save_best=True)
             ]
 
         # Create and fit model
@@ -609,9 +591,7 @@ class XGBoostRegimeClassifier(BaseRegimeDetector):
 
         fit_params = {}
         if eval_set is not None:
-            eval_set_scaled = [
-                (self.scaler_.transform(X), y) for X, y in eval_set
-            ]
+            eval_set_scaled = [(self.scaler_.transform(X), y) for X, y in eval_set]
             fit_params["eval_set"] = eval_set_scaled
             fit_params["verbose"] = False
 
@@ -689,9 +669,7 @@ class XGBoostRegimeClassifier(BaseRegimeDetector):
         else:
             # Get from booster
             booster = self.model_.get_booster()
-            importance_dict = booster.get_score(
-                importance_type=importance_type
-            )
+            importance_dict = booster.get_score(importance_type=importance_type)
 
             # Map to feature names
             importances = np.zeros(self.n_features)
@@ -732,9 +710,7 @@ class XGBoostRegimeClassifier(BaseRegimeDetector):
             Best parameters
         """
         if y is None:
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(features)
 
         if param_grid is None:
@@ -865,9 +841,7 @@ class SVMRegimeClassifier(BaseRegimeDetector):
         X_scaled = self.scaler_.fit_transform(features)
 
         if y is None:
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(X_scaled)
 
         # Create SVM model
@@ -996,9 +970,7 @@ class SVMRegimeClassifier(BaseRegimeDetector):
             Best parameters
         """
         if y is None:
-            kmeans = KMeans(
-                n_clusters=self.n_regimes, random_state=self.random_state
-            )
+            kmeans = KMeans(n_clusters=self.n_regimes, random_state=self.random_state)
             y = kmeans.fit_predict(features)
 
         if param_grid is None:

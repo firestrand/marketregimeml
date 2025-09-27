@@ -15,7 +15,7 @@ from marketregimeml.models.garch import GARCHRegimeDetector, MSGARCHRegimeDetect
 from marketregimeml.models.ml import (
     RandomForestRegimeClassifier,
     XGBoostRegimeClassifier,
-    SVMRegimeClassifier
+    SVMRegimeClassifier,
 )
 
 # Ensemble models
@@ -24,30 +24,27 @@ from marketregimeml.models.ensemble import (
     VotingEnsemble,
     StackingEnsemble,
     BaggingEnsemble,
-    BoostingEnsemble
+    BoostingEnsemble,
 )
 
 # Deep Learning models removed - were just stubs
 
 __all__ = [
     # Base
-    'BaseRegimeDetector',
-    
+    "BaseRegimeDetector",
     # Statistical models
-    'HMMRegimeDetector',
-    'GMMRegimeDetector',
-    'GARCHRegimeDetector',
-    'MSGARCHRegimeDetector',
-    
+    "HMMRegimeDetector",
+    "GMMRegimeDetector",
+    "GARCHRegimeDetector",
+    "MSGARCHRegimeDetector",
     # ML models
-    'RandomForestRegimeClassifier',
-    'XGBoostRegimeClassifier',
-    'SVMRegimeClassifier',
-    
+    "RandomForestRegimeClassifier",
+    "XGBoostRegimeClassifier",
+    "SVMRegimeClassifier",
     # Ensemble models
-    'EnsembleRegimeDetector',
-    'VotingEnsemble',
-    'StackingEnsemble',
-    'BaggingEnsemble',
-    'BoostingEnsemble',
+    "EnsembleRegimeDetector",
+    "VotingEnsemble",
+    "StackingEnsemble",
+    "BaggingEnsemble",
+    "BoostingEnsemble",
 ]
