@@ -119,7 +119,7 @@ class MarketDataLoader(ABC):
             raise ValueError("Symbol cannot be empty")
         if not timeframe:
             raise ValueError("Timeframe cannot be empty")
-        if end_date and start_date >= end_date:
+        if end_date and start_date > end_date:
             raise ValueError("Start date must be before end date")
         if limit and limit <= 0:
             raise ValueError("Limit must be positive")

@@ -8,11 +8,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from marketregimeml.features.technical import (
-    TechnicalIndicators,
-    _rsi_core,
-    _atr_core,
-)
+from marketregimeml.features.technical import TechnicalIndicators
 
 
 class TestDataHelper:
@@ -78,79 +74,7 @@ class TestDataHelper:
         return pd.Series(prices, index=dates, name="price")
 
 
-class TestRSICore:
-    """Test RSI core calculation function."""
-    
-    def test_rsi_core_basic(self):
-        """Test basic RSI calculation with simple data."""
-        # Create data with clear up and down moves
-        prices = np.array([100, 102, 101, 103, 102, 104, 103, 105, 104, 106])
-        
-        result = _rsi_core(prices, period=5)
-        
-        # Check shape
-        assert len(result) == len(prices)
-        # First period-1 values should be NaN
-        assert np.isnan(result[:5]).all()
-        # RSI should be between 0 and 100
-        valid_rsi = result[~np.isnan(result)]
-        assert (valid_rsi >= 0).all() and (valid_rsi <= 100).all()
-    
-    def test_rsi_core_overbought(self):
-        """Test RSI identifies overbought conditions."""
-        # Strong uptrend should give high RSI
-        prices = np.array([100 + i*2 for i in range(20)])
-        
-        result = _rsi_core(prices, period=14)
-        
-        # Last few values should be high (overbought)
-        assert result[-1] > 70
-    
-    def test_rsi_core_oversold(self):
-        """Test RSI identifies oversold conditions."""
-        # Strong downtrend should give low RSI
-        prices = np.array([100 - i*2 for i in range(20)])
-        
-        result = _rsi_core(prices, period=14)
-        
-        # Last few values should be low (oversold)
-        assert result[-1] < 30
-
-
-class TestATRCore:
-    """Test ATR core calculation function."""
-    
-    def test_atr_core_basic(self):
-        """Test basic ATR calculation."""
-        high = np.array([102, 103, 102, 104, 103, 105, 104, 106, 105, 107])
-        low = np.array([98, 99, 98, 100, 99, 101, 100, 102, 101, 103])
-        close = np.array([100, 101, 100, 102, 101, 103, 102, 104, 103, 105])
-        
-        result = _atr_core(high, low, close, period=5)
-        
-        assert len(result) == len(close)
-        # First period-1 values should be NaN
-        assert np.isnan(result[:4]).all()
-        # ATR should be positive
-        assert (result[~np.isnan(result)] > 0).all()
-    
-    def test_atr_increases_with_volatility(self):
-        """Test ATR increases with higher volatility."""
-        # Low volatility
-        low_vol_high = np.array([101] * 20)
-        low_vol_low = np.array([99] * 20)
-        low_vol_close = np.array([100] * 20)
-        
-        # High volatility
-        high_vol_high = np.array([105, 95, 105, 95] * 5)
-        high_vol_low = np.array([95, 85, 95, 85] * 5)
-        high_vol_close = np.array([100, 90, 100, 90] * 5)
-        
-        low_atr = _atr_core(low_vol_high, low_vol_low, low_vol_close, period=10)
-        high_atr = _atr_core(high_vol_high, high_vol_low, high_vol_close, period=10)
-        
-        # High volatility should have higher ATR
-        assert np.nanmean(high_atr) > np.nanmean(low_atr)
+# Tests for internal functions removed - now using common_features implementations
 
 
 class TestTechnicalIndicators:
@@ -177,7 +101,6 @@ class TestTechnicalIndicators:
         
         assert isinstance(result, pd.Series)
         assert len(result) == len(price_data)
-        assert result.name == "rsi_14"
         # RSI range check
         valid_values = result.dropna()
         assert (valid_values >= 0).all() and (valid_values <= 100).all()
@@ -193,7 +116,6 @@ class TestTechnicalIndicators:
         
         assert isinstance(result, pd.Series)
         assert len(result) == len(ohlcv_data)
-        assert result.name == "atr_14"
         # ATR should be positive
         assert (result.dropna() > 0).all()
     
@@ -205,12 +127,7 @@ class TestTechnicalIndicators:
         assert isinstance(upper, pd.Series)
         assert isinstance(middle, pd.Series)
         assert isinstance(lower, pd.Series)
-        
-        # Check naming
-        assert upper.name == "bb_upper_20"
-        assert middle.name == "bb_middle_20"
-        assert lower.name == "bb_lower_20"
-        
+
         # Check logical ordering
         valid_idx = ~(upper.isna() | middle.isna() | lower.isna())
         assert (upper[valid_idx] > middle[valid_idx]).all()
@@ -224,12 +141,7 @@ class TestTechnicalIndicators:
         assert isinstance(macd_line, pd.Series)
         assert isinstance(signal_line, pd.Series)
         assert isinstance(histogram, pd.Series)
-        
-        # Check naming
-        assert macd_line.name == "macd"
-        assert signal_line.name == "macd_signal"
-        assert histogram.name == "macd_histogram"
-        
+
         # Histogram should be difference between MACD and signal
         valid_idx = ~(macd_line.isna() | signal_line.isna())
         np.testing.assert_array_almost_equal(

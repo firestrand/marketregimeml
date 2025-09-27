@@ -44,10 +44,10 @@ class GARCHModel:
 
     def __init__(self, p: int = 1, q: int = 1, distribution: str = "normal"):
         """Initialize GARCH model."""
-        if p <= 0:
-            raise ValueError("p must be positive")
-        if q < 0:
-            raise ValueError("q must be positive")
+        from marketregimeml.utils.common import ParameterValidator
+
+        ParameterValidator.validate_positive(p, "p")
+        ParameterValidator.validate_non_negative(q, "q")
         if distribution not in ["normal", "t", "skewt", "ged"]:
             raise ValueError(f"Invalid distribution: {distribution}")
 
@@ -655,6 +655,9 @@ class MSGARCHRegimeDetector(BaseRegimeDetector):
 
         returns = features["returns"].values
 
+        # Store the fitted data for smoothing
+        self._fitted_features = features.copy()
+
         # Note: Full MS-GARCH implementation would require specialized library
         # This is a simplified version for demonstration
 
@@ -889,15 +892,53 @@ class MSGARCHRegimeDetector(BaseRegimeDetector):
         Returns
         -------
         smoothed : np.ndarray
-            Smoothed probabilities (placeholder implementation)
+            Smoothed probabilities using forward-backward algorithm
         """
         if not self.is_fitted:
             raise ValueError("Model not fitted")
 
-        # This would normally use forward-backward algorithm
-        # Placeholder returns uniform probabilities
-        n = 100  # Default size
-        return np.ones((n, self.n_regimes)) / self.n_regimes
+        if not hasattr(self, '_fitted_features'):
+            # Fallback for models fitted before this change
+            raise ValueError("Model needs to be refitted to compute smoothed probabilities")
+
+        # Get the filtered probabilities
+        filtered_probs = self.predict_proba(self._fitted_features)
+        n = len(filtered_probs)
+
+        # Apply forward-backward smoothing
+        smoothed = np.zeros((n, self.n_regimes))
+
+        # Forward pass
+        forward = np.zeros((n, self.n_regimes))
+        forward[0] = filtered_probs[0]
+
+        for t in range(1, n):
+            for j in range(self.n_regimes):
+                forward[t, j] = filtered_probs[t, j] * np.sum(
+                    forward[t-1] * self.transition_matrix_[:, j]
+                )
+            # Normalize
+            forward[t] /= np.sum(forward[t])
+
+        # Backward pass
+        backward = np.zeros((n, self.n_regimes))
+        backward[-1] = 1.0
+
+        for t in range(n-2, -1, -1):
+            for i in range(self.n_regimes):
+                backward[t, i] = np.sum(
+                    self.transition_matrix_[i, :] * filtered_probs[t+1] * backward[t+1]
+                )
+            # Normalize
+            if np.sum(backward[t]) > 0:
+                backward[t] /= np.sum(backward[t])
+
+        # Combine forward and backward
+        for t in range(n):
+            smoothed[t] = forward[t] * backward[t]
+            smoothed[t] /= np.sum(smoothed[t])
+
+        return smoothed
 
     def get_diagnostics(self) -> Dict[str, float]:
         """Get model diagnostics.

@@ -378,6 +378,9 @@ class OANDADataLoader(MarketDataLoader):
                 df = df.iloc[-limit:]
             return df
 
+        except ConnectionError:
+            # Re-raise connection errors for proper handling
+            raise
         except Exception as e:
             logger.error(f"Error fetching OANDA data: {e}")
             return self._empty_ohlcv_dataframe()

@@ -9,7 +9,13 @@ from marketregimeml.features.volatility import VolatilityFeatures
 from marketregimeml.features.entropy import EntropyFeatures
 from marketregimeml.features.statistical import StatisticalFeatures
 from marketregimeml.features.technical import TechnicalIndicators
-from marketregimeml.features.comprehensive import ComprehensiveFeatures
+from marketregimeml.features.base import BaseFeatureCalculator
+from marketregimeml.features.common_features import (
+    PriceFeatures,
+    StatisticalFeatures as CommonStatisticalFeatures,
+    RegimeFeatures,
+    TechnicalFeatures,
+)
 
 
 __all__ = [
@@ -18,5 +24,9 @@ __all__ = [
     "EntropyFeatures",
     "StatisticalFeatures",
     "TechnicalIndicators",
-    "ComprehensiveFeatures",
+    "BaseFeatureCalculator",
+    "PriceFeatures",
+    "CommonStatisticalFeatures",
+    "RegimeFeatures",
+    "TechnicalFeatures",
 ]

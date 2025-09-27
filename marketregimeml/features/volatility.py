@@ -1,7 +1,15 @@
-"""Volatility feature calculators with Numba optimization."""
+"""Volatility feature calculators.
+
+This module provides specialized volatility measures beyond simple
+standard deviation. For basic volatility, use common_features.PriceFeatures.calculate_volatility.
+"""
 
 import numpy as np
 import pandas as pd
+
+from marketregimeml.features.base import BaseFeatureCalculator
+from marketregimeml.features.common_features import PriceFeatures
+from marketregimeml.utils.logging import get_logger
 
 # Optional Numba acceleration
 try:  # pragma: no cover - optional dependency
@@ -12,8 +20,6 @@ except Exception:  # Fallback: define no-op decorator
             return func
 
         return wrapper
-
-from marketregimeml.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -161,13 +167,67 @@ def _garch_variance_core(returns, omega, alpha, beta):
     return np.sqrt(variance) * np.sqrt(252)
 
 
-class VolatilityFeatures:
-    """Advanced volatility feature calculators."""
+class VolatilityFeatures(BaseFeatureCalculator):
+    """Advanced volatility feature calculators.
+
+    This class provides specialized volatility measures:
+    - Yang-Zhang: Most accurate, accounts for gaps
+    - Garman-Klass: Uses high-low-close information
+    - Parkinson: Simple high-low volatility
+    - Rogers-Satchell: Drift-independent
+    - GARCH: Conditional volatility
+
+    For simple rolling standard deviation, use PriceFeatures.calculate_volatility()
+    """
 
     def __init__(self):
         """Initialize volatility calculator."""
         self.min_window = 2
+        self._price_features = PriceFeatures()
         logger.debug("VolatilityFeatures initialized")
+
+    def calculate_features(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Calculate all volatility features.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            OHLCV data
+
+        Returns
+        -------
+        pd.DataFrame
+            Calculated volatility features
+        """
+        features = pd.DataFrame(index=data.index)
+
+        # Check what data is available
+        has_ohlc = all(col in data.columns for col in ['open', 'high', 'low', 'close'])
+        has_hlc = all(col in data.columns for col in ['high', 'low', 'close'])
+        has_close = 'close' in data.columns
+
+        if has_ohlc:
+            # Calculate all OHLC-based volatilities
+            features['yang_zhang'] = self.yang_zhang(
+                data['open'], data['high'], data['low'], data['close']
+            )
+            features['rogers_satchell'] = self.rogers_satchell(
+                data['open'], data['high'], data['low'], data['close']
+            )
+
+        if has_hlc:
+            features['garman_klass'] = self.garman_klass(
+                data['high'], data['low'], data['close']
+            )
+            features['parkinson'] = self.parkinson(data['high'], data['low'])
+
+        if has_close:
+            # Basic volatility using common_features
+            returns = self._price_features.calculate_returns(data['close'])
+            features['volatility'] = self._price_features.calculate_volatility(returns)
+            features['vol_of_vol'] = self.volatility_of_volatility(data['close'])
+
+        return features
 
     def yang_zhang(
         self,
@@ -192,8 +252,7 @@ class VolatilityFeatures:
         Returns:
             Yang-Zhang volatility series
         """
-        if window < self.min_window:
-            raise ValueError(f"Window must be at least {self.min_window}")
+        self.validate_window(window, min_window=self.min_window)
 
         result = _yang_zhang_core(
             open_prices.values,
@@ -227,8 +286,7 @@ class VolatilityFeatures:
         Returns:
             Garman-Klass volatility series
         """
-        if window < self.min_window:
-            raise ValueError(f"Window must be at least {self.min_window}")
+        self.validate_window(window, min_window=self.min_window)
 
         result = _garman_klass_core(
             high_prices.values, low_prices.values, close_prices.values, window
@@ -253,8 +311,7 @@ class VolatilityFeatures:
         Returns:
             Parkinson volatility series
         """
-        if window < self.min_window:
-            raise ValueError(f"Window must be at least {self.min_window}")
+        self.validate_window(window, min_window=self.min_window)
 
         result = _parkinson_core(high_prices.values, low_prices.values, window)
 
@@ -284,8 +341,7 @@ class VolatilityFeatures:
         Returns:
             Rogers-Satchell volatility series
         """
-        if window < self.min_window:
-            raise ValueError(f"Window must be at least {self.min_window}")
+        self.validate_window(window, min_window=self.min_window)
 
         result = _rogers_satchell_core(
             open_prices.values,
@@ -304,7 +360,7 @@ class VolatilityFeatures:
     ) -> pd.Series:
         """Calculate standard close-to-close volatility.
 
-        Traditional volatility measure using only close prices.
+        Delegates to PriceFeatures for consistency.
 
         Args:
             close_prices: Close price series
@@ -313,10 +369,8 @@ class VolatilityFeatures:
         Returns:
             Close-to-close volatility series
         """
-        returns = np.log(close_prices / close_prices.shift(1))
-        volatility = returns.rolling(window=window).std() * np.sqrt(252)
-        volatility.name = f"close_volatility_{window}"
-        return volatility
+        returns = self._price_features.calculate_returns(close_prices, method='log')
+        return self._price_features.calculate_volatility(returns, window=window, annualize=True)
 
     def garch_volatility(
         self,

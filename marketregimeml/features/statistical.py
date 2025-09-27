@@ -1,10 +1,20 @@
-"""Statistical feature calculators."""
+"""Statistical feature calculators.
+
+This module provides advanced statistical features. For basic rolling statistics,
+use common_features.StatisticalFeatures or base.BaseFeatureCalculator.
+"""
 
 import warnings
 from typing import Optional
 
 import numpy as np
 import pandas as pd
+from scipy import stats
+
+from marketregimeml.features.base import BaseFeatureCalculator
+from marketregimeml.features.common_features import StatisticalFeatures as CommonStats
+from marketregimeml.utils.logging import get_logger
+
 # Optional Numba acceleration
 try:  # pragma: no cover - optional dependency
     from numba import jit
@@ -14,7 +24,6 @@ except Exception:
             return func
 
         return wrapper
-from scipy import stats
 
 # Try to import entropy libraries
 try:
@@ -26,8 +35,6 @@ except ImportError:
     warnings.warn(
         "antropy not installed. Some entropy features will use fallback implementations."
     )
-
-from marketregimeml.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -98,46 +105,66 @@ def _autocorrelation_core(data, window, lag):
     return result
 
 
-class StatisticalFeatures:
-    """Statistical feature calculators for market data."""
+class StatisticalFeatures(BaseFeatureCalculator):
+    """Advanced statistical feature calculators.
+
+    This class provides specialized statistical features.
+    For basic statistics (mean, std, skew, kurt), use:
+    - CommonStats for rolling statistics
+    - BaseFeatureCalculator.rolling_operation() for custom operations
+    """
 
     def __init__(self):
         """Initialize statistical calculator."""
+        self._common_stats = CommonStats()
         logger.debug("StatisticalFeatures initialized")
 
-    def rolling_skewness(self, data: pd.Series, window: int = 20) -> pd.Series:
-        """Calculate rolling skewness.
+    def calculate_features(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Calculate all statistical features.
 
-        Measures asymmetry of return distribution.
-        Negative skew indicates left tail risk.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Input data (typically with 'close' or 'returns' column)
 
-        Args:
-            data: Input time series (typically returns)
-            window: Rolling window size
-
-        Returns:
-            Rolling skewness series
+        Returns
+        -------
+        pd.DataFrame
+            Calculated statistical features
         """
-        clean_data = data.fillna(0)
-        result = _rolling_skewness_core(clean_data.values, window)
-        return pd.Series(result, index=data.index, name=f"skewness_{window}")
+        features = pd.DataFrame(index=data.index)
+
+        # Use returns if available, otherwise calculate from close
+        if 'returns' in data.columns:
+            returns = data['returns']
+        elif 'close' in data.columns:
+            returns = data['close'].pct_change()
+        else:
+            return features  # No suitable data
+
+        # Basic statistics (delegating to common/base)
+        features['skewness'] = self.rolling_skewness(returns)
+        features['kurtosis'] = self.rolling_kurtosis(returns)
+        features['autocorr'] = self.autocorrelation(returns)
+
+        # Advanced statistics
+        features['hurst'] = self.hurst_exponent(returns)
+        features['jarque_bera'] = self.jarque_bera_stat(returns)
+
+        # Entropy measures (if data is long enough)
+        if len(returns) > 100:
+            features['shannon_entropy'] = self.shannon_entropy(returns)
+            features['approx_entropy'] = self.approximate_entropy(returns)
+
+        return features
+
+    def rolling_skewness(self, data: pd.Series, window: int = 20) -> pd.Series:
+        """Calculate rolling skewness - delegates to CommonStats."""
+        return self._common_stats.calculate_rolling_skewness(data, window)
 
     def rolling_kurtosis(self, data: pd.Series, window: int = 20) -> pd.Series:
-        """Calculate rolling kurtosis (excess).
-
-        Measures tail heaviness of return distribution.
-        High kurtosis indicates fat tails and extreme events.
-
-        Args:
-            data: Input time series (typically returns)
-            window: Rolling window size
-
-        Returns:
-            Rolling excess kurtosis series
-        """
-        clean_data = data.fillna(0)
-        result = _rolling_kurtosis_core(clean_data.values, window)
-        return pd.Series(result, index=data.index, name=f"kurtosis_{window}")
+        """Calculate rolling kurtosis - delegates to CommonStats."""
+        return self._common_stats.calculate_rolling_kurtosis(data, window)
 
     def autocorrelation(
         self, data: pd.Series, window: int = 20, lag: int = 1
@@ -475,74 +502,24 @@ class StatisticalFeatures:
     # ============== NEW METHODS USING LIBRARIES ==============
 
     def rolling_mean(self, data: pd.Series, window: int = 20) -> pd.Series:
-        """Calculate rolling mean.
-
-        Args:
-            data: Input time series
-            window: Rolling window size
-
-        Returns:
-            Rolling mean series
-        """
-        result = data.rolling(window=window, min_periods=window).mean()
-        result.name = f"mean_{window}"
-        return result
+        """Calculate rolling mean - delegates to base class."""
+        return self.rolling_operation(data, window, 'mean')
 
     def rolling_std(self, data: pd.Series, window: int = 20) -> pd.Series:
-        """Calculate rolling standard deviation.
-
-        Args:
-            data: Input time series
-            window: Rolling window size
-
-        Returns:
-            Rolling standard deviation series
-        """
-        result = data.rolling(window=window, min_periods=window).std()
-        result.name = f"std_{window}"
-        return result
+        """Calculate rolling standard deviation - delegates to base class."""
+        return self.rolling_operation(data, window, 'std')
 
     def rolling_median(self, data: pd.Series, window: int = 20) -> pd.Series:
-        """Calculate rolling median.
-
-        Args:
-            data: Input time series
-            window: Rolling window size
-
-        Returns:
-            Rolling median series
-        """
-        result = data.rolling(window=window, min_periods=window).median()
-        result.name = f"median_{window}"
-        return result
+        """Calculate rolling median - delegates to base class."""
+        return self.rolling_operation(data, window, 'median')
 
     def rolling_min(self, data: pd.Series, window: int = 20) -> pd.Series:
-        """Calculate rolling minimum.
-
-        Args:
-            data: Input time series
-            window: Rolling window size
-
-        Returns:
-            Rolling minimum series
-        """
-        result = data.rolling(window=window, min_periods=window).min()
-        result.name = f"min_{window}"
-        return result
+        """Calculate rolling minimum - delegates to base class."""
+        return self.rolling_operation(data, window, 'min')
 
     def rolling_max(self, data: pd.Series, window: int = 20) -> pd.Series:
-        """Calculate rolling maximum.
-
-        Args:
-            data: Input time series
-            window: Rolling window size
-
-        Returns:
-            Rolling maximum series
-        """
-        result = data.rolling(window=window, min_periods=window).max()
-        result.name = f"max_{window}"
-        return result
+        """Calculate rolling maximum - delegates to base class."""
+        return self.rolling_operation(data, window, 'max')
 
     def rolling_quantile(
         self, data: pd.Series, window: int = 20, quantile: float = 0.5
